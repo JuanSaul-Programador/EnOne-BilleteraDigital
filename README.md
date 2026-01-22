@@ -106,6 +106,77 @@ El proyecto sigue una arquitectura limpia (Clean Architecture) modularizada:
 
 ---
 
+## 🎭 Servicios Mockeados (Simulaciones)
+
+Para garantizar un entorno de desarrollo robusto sin depender de servicios externos de pago o gubernamentales inestables, el proyecto incluye **servidores mock** internos que simulan respuestas reales:
+
+### 🏦 Mock Banco
+Simula una entidad bancaria para validar tarjetas y procesar pagos.
+*   **Funcionalidad**: Valida número de tarjeta, CVV, fecha de vencimiento y saldo.
+*   **Tabla**: `mock_tarjeta`
+*   **Caso de Uso**: Cuando recargas saldo en tu billetera digital, esta consulta internamente al "Banco Mock" si la tarjeta es válida y descuenta el saldo "real" de esa tarjeta simulada.
+
+### 🆔 Mock RENIEC
+Simula el servicio gubernamental de identificación de Perú.
+*   **Funcionalidad**: Devuelve nombres y apellidos basados en un DNI.
+*   **Tabla**: `mock_reniec`
+*   **Caso de Uso**: Al registrarse, el usuario solo ingresa su DNI y el sistema "autocompleta" sus datos consultando a este mock.
+
+---
+
+## 🧪 Datos de Prueba (SQL)
+
+Para probar todos los flujos inmediatamente sin registrar manualmeente datos en los mocks, ejecuta estos scripts SQL en tu base de datos `enone_db`:
+
+### 1. Insertar Personas en RENIEC (Para Registro)
+```sql
+INSERT INTO mock_reniec (dni, nombres, apellidos, fecha_nacimiento) VALUES
+('40556677', 'JUAN SAUL', 'PEREZ LOPEZ', '1990-05-15'),
+('70889900', 'MARIA ANA', 'GOMEZ RUIZ', '1995-10-20');
+```
+*Usa el DNI `40556677` al registrarte para que el sistema reconozca a "Juan Saul".*
+
+### 2. Insertar Tarjetas en Banco (Para Recargas)
+```sql
+INSERT INTO mock_tarjeta (numero_tarjeta, cvv, fecha_vencimiento, nombre_titular, saldo_disponible, activa, created_at, updated_at) VALUES
+('4557880012345678', '123', '12/28', 'JUAN PEREZ', 5000.00, 1, NOW(), NOW()),
+('5100000000000001', '456', '01/30', 'MARIA GOMEZ', 10000.00, 1, NOW(), NOW());
+```
+*Usa la tarjeta `4557880012345678` con CVV `123` y vto `12/28` para recargar saldo en tu billetera.*
+
+### 3. Usuarios Pre-creados (Backup)
+Si fallan las APIs de registro (CallMeBot), usa estos scripts para crear usuarios listos para loguearse:
+
+```sql
+-- 1. Crear Roles
+INSERT IGNORE INTO roles (name) VALUES ('ROLE_USER'), ('ROLE_ADMIN');
+
+-- 2. Crear Usuario (Password: 123456)
+INSERT INTO users (username, password, enabled, created_at, updated_at) VALUES 
+('usuario_demo@enone.com', '$2a$10$xK7.3..1..2..3..4..5..6..7..8..9..0..1..2..3..4', 1, NOW(), NOW()); -- Hash real de '123456'
+
+-- 3. Asignar Rol
+INSERT INTO user_roles (user_id, role_id) 
+SELECT u.id, r.id FROM users u, roles r WHERE u.username = 'usuario_demo@enone.com' AND r.name = 'ROLE_USER';
+
+-- 4. Crear Perfil
+INSERT INTO user_profile (user_id, email, first_name, last_name, document_type, document_number, phone, two_factor_enabled, created_at, updated_at)
+SELECT id, 'usuario_demo@enone.com', 'Usuario', 'Demo', 'DNI', '10203040', '999888777', 0, NOW(), NOW()
+FROM users WHERE username = 'usuario_demo@enone.com';
+
+-- 5. Crear Billeteras (PEN y USD)
+INSERT INTO wallets (user_id, wallet_number, currency, balance, status, created_at, updated_at)
+SELECT id, 'W-PEN-10203040', 'PEN', 1000.00, 'ACTIVE', NOW(), NOW()
+FROM users WHERE username = 'usuario_demo@enone.com';
+
+INSERT INTO wallets (user_id, wallet_number, currency, balance, status, created_at, updated_at)
+SELECT id, 'W-USD-10203040', 'USD', 500.00, 'ACTIVE', NOW(), NOW()
+FROM users WHERE username = 'usuario_demo@enone.com';
+```
+*Usuario: `usuario_demo@enone.com` | Password: `123456`*
+
+---
+
 ## ⚙️ Guía de Instalación Local
 
 Sigue estos pasos para levantar el proyecto en tu máquina.
@@ -149,7 +220,7 @@ Visita `http://localhost:8080/index.html` para ver la aplicación web.
 
 ## 👥 Contribución
 
-Este proyecto es parte del portafolio profesional de **Juan Saul**. Si deseas contribuir o reportar un bug, por favor abre un Issue en el repositorio.
+Desarrollado por Juan Saul Pereyra Acedo | Backend Developer
 
 ---
-© 2025 EnOne Fintech. Todos los derechos reservados.
+© 2025 EnOne . Todos los derechos reservados.
