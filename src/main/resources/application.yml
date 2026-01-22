@@ -1,0 +1,66 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /enone
+
+spring:
+  application:
+    name: enone-spring
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/enone_db
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:password}
+
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format-sql: true
+
+  security:
+    jwt:
+      secret: ${JWT_SECRET:changeme_jwt_secret_must_be_long_enough_for_security}
+      expiration: 604800000
+
+  web:
+    resources:
+      static-locations: classpath:/static/
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME:enoneproyecto@gmail.com}
+    password: ${EMAIL_PASSWORD:tu_app_password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
+
+app:
+  email:
+    sender:
+      email: ${EMAIL_USERNAME:enoneproyecto@gmail.com}
+      name: EnOne
+  sms:
+    callmebot:
+      api-url: https://api.callmebot.com/whatsapp.php
+      keys: ${CALLMEBOT_KEYS:phone:apikey}
+
+
+ibm:
+  watson:
+    apikey: ${IBM_WATSON_API_KEY:placeholder_api_key}
+    url: https://api.au-syd.assistant.watson.cloud.ibm.com
+    assistant:
+      id: 4a6750e0-d901-43f3-aaab-a24529dac835
+    environment:
+      id: c1140b6e-4158-49b5-a8c6-e3be5286d728

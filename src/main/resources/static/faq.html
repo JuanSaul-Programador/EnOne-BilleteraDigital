@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preguntas Frecuentes - EnOne</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="assets/css/profile.css">
+</head>
+
+<body>
+    <nav class="nav-card sticky top-0 z-50 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="text-3xl font-bold glow-blue flex items-center gap-3">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg">
+                        <i class="bi bi-question-circle-fill text-xl"></i>
+                    </div>
+                    EnOne
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="wallet.html"
+                        class="text-gray-600 hover:text-blue-600 transition-all hidden sm:flex items-center gap-2 font-medium">
+                        <i class="bi bi-house-door-fill"></i> Inicio
+                    </a>
+                    <a href="profile.html"
+                        class="text-gray-600 hover:text-blue-600 transition-all hidden sm:flex items-center gap-2 font-medium">
+                        <i class="bi bi-person-circle"></i> Perfil
+                    </a>
+                    <a href="faq.html"
+                        class="text-blue-600 hover:text-blue-800 border-b-2 border-blue-500 pb-2 hidden sm:flex items-center gap-2 font-semibold transition-all">
+                        <i class="bi bi-question-circle"></i> FAQ
+                    </a>
+                    <span id="headerName" class="text-gray-700 font-semibold hidden md:inline">-</span>
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-bold flex items-center justify-center shadow-lg"
+                        id="userAvatar">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <button
+                        class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        id="logout">
+                        <i class="bi bi-box-arrow-right"></i> Salir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-8">
+        <div class="profile-header mb-8">
+            <div class="flex items-center gap-4 mb-6">
+                <div
+                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg">
+                    <i class="bi bi-question-circle-fill text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold text-black">Preguntas Frecuentes</h1>
+                    <p class="text-gray-600 mt-1">Encuentra respuestas a las dudas más comunes sobre EnOne</p>
+                </div>
+            </div>
+
+            <!-- Estadísticas rápidas -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center">
+                            <i class="bi bi-shield-check text-white"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-blue-600 font-medium">100% Seguro</div>
+                            <div class="text-xs text-blue-500">Encriptación bancaria</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center">
+                            <i class="bi bi-cash-coin text-white"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-green-600 font-medium">Sin Comisiones</div>
+                            <div class="text-xs text-green-500">Todas las operaciones</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center">
+                            <i class="bi bi-clock text-white"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-purple-600 font-medium">24/7 Disponible</div>
+                            <div class="text-xs text-purple-500">Siempre activo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Sección: Saldos y Monedas -->
+            <div class="enone-card p-6 rounded-2xl">
+                <div class="flex items-center gap-3 mb-6">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white">
+                        <i class="bi bi-cash-coin"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-black">Saldos y Monedas</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Por qué tengo dos saldos diferentes en mi wallet?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>EnOne te permite manejar dos monedas: <strong>Soles Peruanos (PEN)</strong> y
+                                <strong>Dólares Americanos (USD)</strong>. Cada moneda tiene su propio saldo
+                                independiente, lo que te da mayor flexibilidad para gestionar tu dinero en ambas
+                                divisas.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Cómo funciona la conversión entre PEN y USD?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>Las conversiones utilizan tasas de cambio en <strong>tiempo real</strong> obtenidas de
+                                fuentes financieras confiables. La tasa se actualiza constantemente para ofrecerte el
+                                mejor valor de mercado. Todas las conversiones son <strong>gratuitas y sin
+                                    comisiones</strong>.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Puedo tener saldo negativo en mi wallet?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p><strong>No</strong>, EnOne no permite saldos negativos. Solo puedes realizar
+                                transacciones si tienes fondos suficientes en la moneda correspondiente. Esto protege tu
+                                estabilidad financiera y evita sobregiros accidentales.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección: Transferencias -->
+            <div class="enone-card p-6 rounded-2xl">
+                <div class="flex items-center gap-3 mb-6">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-black">Transferencias</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Puedo cancelar una transferencia después de enviarla?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p><strong>No</strong>, una vez que confirmas y envías una transferencia, <strong>no se
+                                    puede cancelar</strong>. Las transferencias se procesan instantáneamente por
+                                seguridad. Asegúrate siempre de verificar el destinatario y el monto antes de confirmar.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Por qué necesito autenticación de dos factores (2FA) para transferir?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>El 2FA es una <strong>capa adicional de seguridad</strong> que protege tu dinero. Incluso
+                                si alguien obtiene tu contraseña, necesitaría también acceso a tu dispositivo móvil para
+                                completar transferencias. Es tu escudo contra el fraude.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección: Seguridad -->
+            <div class="enone-card p-6 rounded-2xl">
+                <div class="flex items-center gap-3 mb-6">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-black">Seguridad</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Por qué es importante activar la autenticación de dos factores (2FA)?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p>El 2FA añade una <strong>capa extra de protección</strong> a tu cuenta. Incluso si
+                                alguien conoce tu contraseña, necesitaría acceso físico a tu teléfono para acceder a tu
+                                wallet. Es la mejor defensa contra hackers y accesos no autorizados.</p>
+                        </div>
+                    </div>
+
+                    <div class="faq-item">
+                        <button class="faq-question" onclick="toggleFAQ(this)">
+                            <span>¿Mis datos personales y financieros están seguros?</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="faq-answer">
+                            <p><strong>Absolutamente</strong>. Utilizamos encriptación de grado bancario, almacenamiento
+                                seguro de datos, y seguimos las mejores prácticas de seguridad de la industria. Tu
+                                información está protegida con los más altos estándares de seguridad.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script>
+        // Función para toggle de FAQ
+        function toggleFAQ(button) {
+            const faqItem = button.parentElement;
+            const answer = faqItem.querySelector('.faq-answer');
+            const icon = button.querySelector('i');
+
+            // Toggle la clase active
+            faqItem.classList.toggle('active');
+
+            // Cambiar el ícono
+            if (faqItem.classList.contains('active')) {
+                icon.className = 'bi bi-chevron-up';
+                answer.style.maxHeight = answer.scrollHeight + 'px';
+            } else {
+                icon.className = 'bi bi-chevron-down';
+                answer.style.maxHeight = '0';
+            }
+        }
+
+        // Cargar información del usuario
+        async function loadUserInfo() {
+            try {
+                const response = await api('/api/auth/me', { auth: true });
+                const user = response.data || {};
+                const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+                document.getElementById('headerName').textContent = fullName || 'Usuario';
+
+                // Actualizar avatar con inicial del nombre
+                const avatar = document.getElementById('userAvatar');
+                if (user.firstName) {
+                    avatar.innerHTML = user.firstName.charAt(0).toUpperCase();
+                }
+            } catch (error) {
+                console.error('Error cargando información del usuario:', error);
+            }
+        }
+
+        // Logout
+        document.getElementById('logout').addEventListener('click', () => {
+            clearToken();
+            window.location.href = 'login.html';
+        });
+
+        // Verificar autenticación al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = getToken();
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            loadUserInfo();
+        });
+    </script>
+    <!-- Chatbot Widget -->
+    <script src="assets/js/chatbot.js"></script>
+</body>
+
+</html>

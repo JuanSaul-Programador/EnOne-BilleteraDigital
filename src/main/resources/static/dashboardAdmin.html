@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - EnOne</title>
+
+    <script>
+        (function () {
+            'use strict';
+            function getToken() { return localStorage.getItem('token'); }
+            function isTokenExpired(token) { try { const payload = JSON.parse(atob(token.split('.')[1])); return Date.now() >= payload.exp * 1000; } catch (e) { return true; } }
+            function getRolesFromToken(token) { try { const payload = JSON.parse(atob(token.split('.')[1])); return payload.roles || []; } catch (e) { return []; } }
+            function isAdmin(roles) { return Array.isArray(roles) && roles.includes('ADMIN'); }
+            const token = getToken();
+            if (!token || isTokenExpired(token) || !isAdmin(getRolesFromToken(token))) {
+                alert('⛔ Acceso Denegado');
+                window.location.href = 'login.html';
+                throw new Error("Acceso denegado");
+            }
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 256px;
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            color: #d1d5db;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            background-color: #f9fafb;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid #374151;
+        }
+
+        .sidebar-logo {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #3b82f6;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .admin-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #d1d5db;
+            margin: 0 0.5rem;
+        }
+
+        .admin-link:hover {
+            background-color: #374151;
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .admin-link.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .admin-link i {
+            font-size: 1.25rem;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid #e5e7eb;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgb(0 0 0 / 0.15);
+        }
+
+        .kpi-icon {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 1rem;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .kpi-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1f2937;
+            line-height: 1;
+            margin-top: 0.25rem;
+        }
+
+        .chart-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            margin-bottom: 1rem;
+        }
+
+        .spinner-large {
+            border: 4px solid rgba(59, 130, 246, 0.3);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .swal2-popup {
+            background: #1e40af !important;
+            color: #f3f4f6 !important;
+        }
+
+        .swal2-title {
+            color: #f3f4f6 !important;
+        }
+
+        .swal2-html-container {
+            color: #e5e7eb !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo">E1</span>
+                <span class="sidebar-title">Admin Panel</span>
+            </div>
+            <nav class="flex-grow p-4 space-y-2">
+                <a href="dashboardAdmin.html" class="admin-link active">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="admin-users.html" class="admin-link">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Usuarios</span>
+                </a>
+                <a href="admin-transactions.html" class="admin-link">
+                    <i class="bi bi-list-ul"></i>
+                    <span>Transacciones</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-gray-700">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white font-bold flex items-center justify-center shadow-lg"
+                        id="adminAvatar">A</div>
+                    <div>
+                        <div class="font-semibold text-white" id="adminName">Admin</div>
+                        <div class="text-sm text-gray-400" id="adminEmail">admin@enone.com</div>
+                    </div>
+                </div>
+                <a href="#" id="adminLogout"
+                    class="admin-link !bg-gradient-to-r !from-red-600 !to-red-700 !text-white hover:!from-red-700 hover:!to-red-800 !shadow-lg">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="loading" class="flex flex-col items-center justify-center h-full">
+                <div class="spinner-large"></div>
+                <p class="mt-4 text-blue-800 font-semibold">Cargando Dashboard...</p>
+            </div>
+
+            <div id="adminContent" class="hidden p-6 lg:p-8 space-y-6 lg:space-y-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Dashboard Administrativo</h1>
+                    <p class="text-gray-600 mt-1">Vista general del sistema EnOne</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <div class="kpi-card">
+                        <div class="kpi-icon bg-gradient-to-br from-blue-500 to-blue-600"><i
+                                class="bi bi-cash-coin"></i></div>
+                        <div>
+                            <div class="kpi-label">Saldo Total (PEN)</div>
+                            <div class="kpi-value" id="kpi-total-pen">S/ 0.00</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon bg-gradient-to-br from-green-500 to-green-600"><i
+                                class="bi bi-currency-dollar"></i></div>
+                        <div>
+                            <div class="kpi-label">Saldo Total (USD)</div>
+                            <div class="kpi-value" id="kpi-total-usd">$ 0.00</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon bg-gradient-to-br from-purple-500 to-purple-600"><i
+                                class="bi bi-people-fill"></i></div>
+                        <div>
+                            <div class="kpi-label">Usuarios Totales</div>
+                            <div class="kpi-value" id="kpi-total-users">0</div>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon bg-gradient-to-br from-yellow-500 to-yellow-600"><i
+                                class="bi bi-person-plus-fill"></i></div>
+                        <div>
+                            <div class="kpi-label">Nuevos (Hoy)</div>
+                            <div class="kpi-value" id="kpi-new-users">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+                    <div class="chart-card">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <i class="bi bi-graph-up text-blue-500"></i>
+                            Transacciones (Últimas 24h)
+                        </h3>
+                        <div class="chart-container">
+                            <canvas id="chart-transactions"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <i class="bi bi-people text-purple-500"></i>
+                            Actividad de Usuarios
+                        </h3>
+                        <div class="chart-container">
+                            <canvas id="chart-user-activity"></canvas>
+                        </div>
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs text-gray-600 mt-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-[#10b981]"></div>
+                                <span>Activos (últimos 7d)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-[#f59e0b]"></div>
+                                <span>Sin uso</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-[#f97316]"></div>
+                                <span>Inactivos (30+ días)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full bg-[#ef4444]"></div>
+                                <span>Deshabilitados</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="bi bi-trophy text-orange-500"></i>
+                            Estadísticas Destacadas
+                        </h3>
+                        <span class="text-xs text-gray-500 flex items-center gap-1">
+                            <i class="bi bi-calendar-week"></i>
+                            Últimos 7 días
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div
+                            class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border-l-4 border-blue-500">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                                    <i class="bi bi-person-check text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">Usuario más activo</div>
+                                    <div class="text-lg font-bold text-gray-900" id="mostActiveUser">0 transacciones
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border-l-4 border-green-500">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                                    <i class="bi bi-clock text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">Hora pico</div>
+                                    <div class="text-lg font-bold text-gray-900" id="peakHour">N/A</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border-l-4 border-purple-500">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                                    <i class="bi bi-currency-exchange text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">Moneda preferida</div>
+                                    <div class="text-lg font-bold text-gray-900" id="preferredCurrency">N/A</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            class="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg border-l-4 border-orange-500">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center">
+                                    <i class="bi bi-graph-up text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="text-sm text-gray-600">Método más usado</div>
+                                    <div class="text-lg font-bold text-gray-900" id="mostUsedMethod">N/A</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <a href="admin-transactions.html"
+                            class="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium transition">
+                            <i class="bi bi-arrow-right-circle"></i>
+                            Ver dashboard completo de transacciones
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script>
+        function showAlert(icon, title, text) {
+            Swal.fire({ icon, title, text, toast: true, position: 'top-end', showConfirmButton: false, timer: 5000, timerProgressBar: true, background: '#1e40af', color: '#f3f4f6' });
+        }
+        function showError(msg) { showAlert('error', 'Error', msg || 'Error inesperado'); }
+
+        let txChart = null;
+        let userActivityChart = null;
+
+        function formatCurrency(amount, currency) {
+            const formatted = new Intl.NumberFormat('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(amount));
+            const symbol = currency === 'USD' ? '$' : 'S/';
+            return `${symbol} ${formatted}`;
+        }
+
+        function renderStats(data) {
+            document.getElementById('kpi-total-pen').textContent = formatCurrency(data.totalBalancePen || 0, 'PEN');
+            document.getElementById('kpi-total-usd').textContent = formatCurrency(data.totalBalanceUsd || 0, 'USD');
+            document.getElementById('kpi-total-users').textContent = (data.totalUsers || 0).toLocaleString('es-PE');
+            document.getElementById('kpi-new-users').textContent = (data.newUsersToday || 0).toLocaleString('es-PE');
+        }
+
+        function renderTxChart(hourlyData) {
+            const ctx = document.getElementById('chart-transactions').getContext('2d');
+            if (txChart) txChart.destroy();
+            const labels = Object.keys(hourlyData || {}).sort();
+            const values = labels.map(label => hourlyData[label] || 0);
+            txChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.map(l => new Date(l).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })),
+                    datasets: [{ label: 'Transacciones', data: values, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#3b82f6' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+            });
+        }
+
+        function renderUserActivityChart(data) {
+            const canvas = document.getElementById('chart-user-activity');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (userActivityChart) userActivityChart.destroy();
+            const activeUsers = data.activeUsers || 0;
+            const neverUsedUsers = data.neverUsedUsers || 0;
+            const inactiveUsers = data.inactiveUsers || 0;
+            const disabledUsers = data.disabledUsers || 0;
+            const total = activeUsers + neverUsedUsers + inactiveUsers + disabledUsers;
+            if (total === 0) { canvas.parentElement.innerHTML = '<p class="text-center text-gray-500 py-8">No hay datos de usuarios disponibles</p>'; return; }
+            userActivityChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [`Activos (${activeUsers})`, `Sin Uso (${neverUsedUsers})`, `Inactivos 30d+ (${inactiveUsers})`, `Deshabilitados (${disabledUsers})`],
+                    datasets: [{ data: [activeUsers, neverUsedUsers, inactiveUsers, disabledUsers], backgroundColor: ['#10b981', '#f59e0b', '#f97316', '#ef4444'], borderWidth: 3, borderColor: '#ffffff', hoverOffset: 12 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function renderHighlightStats(highlightStats) {
+            const mostActiveCount = highlightStats.mostActiveUserTransactions || 0;
+            document.getElementById('mostActiveUser').textContent = `${mostActiveCount} transacciones`;
+            const peakHour = highlightStats.peakHour || 'N/A';
+            document.getElementById('peakHour').textContent = peakHour;
+            const preferredCurrency = highlightStats.preferredCurrency || 'N/A';
+            document.getElementById('preferredCurrency').textContent = preferredCurrency;
+            const mostUsedMethod = highlightStats.mostUsedMethod || 'N/A';
+            document.getElementById('mostUsedMethod').textContent = mostUsedMethod;
+        }
+
+        async function loadDashboardData() {
+            const loadingDiv = document.getElementById('loading');
+            const contentDiv = document.getElementById('adminContent');
+            try {
+                const response = await api('/api/admin/dashboard-stats', { auth: true });
+                const data = response.data || response;
+                renderStats(data);
+                renderTxChart(data.hourlyTxCounts);
+                renderUserActivityChart(data);
+                if (data.highlightStats) {
+                    renderHighlightStats(data.highlightStats);
+                }
+                loadingDiv.style.display = 'none';
+                contentDiv.classList.remove('hidden');
+            } catch (err) {
+                console.error('[Dashboard] Error:', err);
+                showError(`Error al cargar datos: ${err.message}`);
+                loadingDiv.innerHTML = `<p class="text-red-500 font-semibold">Error: ${err.message}</p>`;
+            }
+        }
+
+        async function loadAdminUserData() {
+            try {
+                const response = await api('/api/auth/me', { auth: true });
+                const user = response.data || response;
+                document.getElementById('adminName').textContent = user.firstName || 'Admin';
+                document.getElementById('adminEmail').textContent = user.email;
+                document.getElementById('adminAvatar').innerHTML = (user.firstName || 'A').charAt(0).toUpperCase();
+            } catch (err) {
+                console.error("[Dashboard] Error cargando admin:", err);
+            }
+        }
+
+        document.getElementById('adminLogout').addEventListener('click', () => {
+            clearToken();
+            location.href = 'login.html';
+        });
+
+        loadAdminUserData();
+        loadDashboardData();
+    </script>
+</body>
+
+</html>

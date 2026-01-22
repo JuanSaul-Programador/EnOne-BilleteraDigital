@@ -1,0 +1,41 @@
+/* Header profesional */
+.nav-header {
+    background: #3b82f6;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+
+input:focus, select:focus {
+    transform: translateY(-1px);
+}
+
+
+button:active {
+    transform: translateY(0) !important;
+}
+
+
+@media (max-width: 768px) {
+    .grid-cols-1.md\\:grid-cols-2 {
+        gap: 1rem;
+    }
+}

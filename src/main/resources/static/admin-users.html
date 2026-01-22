@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - Admin EnOne</title>
+
+    <script>
+        (function () {
+            'use strict';
+            function getToken() { return localStorage.getItem('token'); }
+            function isTokenExpired(token) { try { const payload = JSON.parse(atob(token.split('.')[1])); return Date.now() >= payload.exp * 1000; } catch (e) { return true; } }
+            function getRolesFromToken(token) { try { const payload = JSON.parse(atob(token.split('.')[1])); return payload.roles || []; } catch (e) { return []; } }
+            function isAdmin(roles) { return Array.isArray(roles) && roles.includes('ADMIN'); }
+            const token = getToken();
+            if (!token || isTokenExpired(token) || !isAdmin(getRolesFromToken(token))) {
+                alert('⛔ Acceso Denegado');
+                window.location.href = 'login.html';
+                throw new Error("Acceso denegado");
+            }
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 256px;
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            color: #d1d5db;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            background-color: #f9fafb;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid #374151;
+        }
+
+        .sidebar-logo {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #3b82f6;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .admin-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #d1d5db;
+            margin: 0 0.5rem;
+        }
+
+        .admin-link:hover {
+            background-color: #374151;
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .admin-link.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .admin-link i {
+            font-size: 1.25rem;
+        }
+
+        .chart-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .data-table th {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background-color: #f9fafb;
+        }
+
+        .data-table td {
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f0f9ff;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-green {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-red {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-gray {
+            background-color: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .spinner-large {
+            border: 4px solid rgba(59, 130, 246, 0.3);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .pagination {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 1px solid #e5e7eb;
+            background-color: white;
+            color: #374151;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background-color: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+
+        .swal2-popup {
+            background: #1e40af !important;
+            color: #f3f4f6 !important;
+        }
+
+        .swal2-title {
+            color: #f3f4f6 !important;
+        }
+
+        .swal2-html-container {
+            color: #e5e7eb !important;
+        }
+
+        .modal {
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.2s ease;
+        }
+
+        .spinner {
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: currentColor;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo">E1</span>
+                <span class="sidebar-title">Admin Panel</span>
+            </div>
+            <nav class="flex-grow p-4 space-y-2">
+                <a href="dashboardAdmin.html" class="admin-link">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="admin-users.html" class="admin-link active">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Usuarios</span>
+                </a>
+                <a href="admin-transactions.html" class="admin-link">
+                    <i class="bi bi-list-ul"></i>
+                    <span>Transacciones</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-gray-700">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white font-bold flex items-center justify-center shadow-lg"
+                        id="adminAvatar">A</div>
+                    <div>
+                        <div class="font-semibold text-white" id="adminName">Admin</div>
+                        <div class="text-sm text-gray-400" id="adminEmail">admin@enone.com</div>
+                    </div>
+                </div>
+                <a href="#" id="adminLogout"
+                    class="admin-link !bg-gradient-to-r !from-red-600 !to-red-700 !text-white hover:!from-red-700 hover:!to-red-800 !shadow-lg">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="loading" class="flex flex-col items-center justify-center h-full">
+                <div class="spinner-large"></div>
+                <p class="mt-4 text-blue-800 font-semibold">Cargando Usuarios...</p>
+            </div>
+
+            <div id="adminContent" class="hidden p-6 lg:p-8 space-y-6">
+                <h1 class="text-3xl font-bold text-gray-900">Gestión de Usuarios</h1>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                    <div class="lg:col-span-2 chart-card">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <i class="bi bi-bar-chart-line-fill text-blue-500"></i>
+                            Nuevos Registros (Últimos 30 días)
+                        </h3>
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="chart-user-growth"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                            <i class="bi bi-shield-check text-purple-500"></i>
+                            Adopción de 2FA
+                        </h3>
+                        <div class="chart-container" style="height: 250px;">
+                            <canvas id="chart-2fa-status"></canvas>
+                        </div>
+                        <div class="flex justify-center gap-4 text-xs text-gray-600 mt-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full" style="background-color: #10b981;"></div>
+                                <span>Activado</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full" style="background-color: #e5e7eb;"></div>
+                                <span>Desactivado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="text" id="searchInput" placeholder="Buscar por ID, Email o DNI..."
+                        class="flex-grow px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <button id="searchButton"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="data-table min-w-full">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <tr>
+                                <td colspan="5" class="text-center text-gray-500 py-8">Cargando usuarios...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="users-pagination-controls"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Message Modal -->
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm hidden"
+        id="messageModal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Enviar Mensaje a <span id="messageUserName"
+                        class="text-blue-600">Usuario</span></h3>
+                <button onclick="closeModal('messageModal')"
+                    class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <form id="messageForm">
+                <input type="hidden" id="messageUserId">
+                <div class="mb-4">
+                    <label for="messageSubject" class="block text-sm font-medium text-gray-700 mb-1">Asunto</label>
+                    <input type="text" id="messageSubject" value="Notificación de tu cuenta EnOne"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        required>
+                </div>
+                <div class="mb-4">
+                    <label for="messageBody" class="block text-sm font-medium text-gray-700 mb-1">Mensaje</label>
+                    <textarea id="messageBody" rows="4"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        placeholder="Escribe tu mensaje aquí..." required></textarea>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('messageModal')"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md border border-gray-300">Cancelar</button>
+                    <button type="submit" id="sendMessageBtn"
+                        class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm inline-flex items-center gap-2">
+                        <span id="sendMessageBtnText">Enviar Mensaje</span>
+                        <span id="sendMessageBtnLoader" class="spinner hidden" style="border-top-color: white;"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Block Modal -->
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 backdrop-blur-sm hidden"
+        id="blockModal">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-red-600 flex items-center gap-2">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    Bloquear Usuario: <span id="blockUserName" class="text-gray-800"></span>
+                </h3>
+                <button onclick="closeModal('blockModal')"
+                    class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <form id="blockForm">
+                <input type="hidden" id="blockUserId">
+                <div class="mb-4">
+                    <label for="blockReason" class="block text-sm font-medium text-gray-700 mb-1">Razón del Bloqueo
+                        (requerido)</label>
+                    <textarea id="blockReason" rows="4"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                        placeholder="Ej: Actividad sospechosa detectada." required></textarea>
+                </div>
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeModal('blockModal')"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md border border-gray-300">Cancelar</button>
+                    <button type="submit" id="blockUserBtn"
+                        class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md shadow-sm inline-flex items-center gap-2">
+                        <span id="blockUserBtnText">Confirmar Bloqueo</span>
+                        <span id="blockUserBtnLoader" class="spinner hidden" style="border-top-color: white;"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script>
+        function showAlert(icon, title, text) {
+            Swal.fire({ icon, title, text, toast: true, position: 'top-end', showConfirmButton: false, timer: 5000, timerProgressBar: true, background: '#1e40af', color: '#f3f4f6' });
+        }
+        function showError(msg) { showAlert('error', 'Error', msg || 'Error inesperado'); }
+        function showSuccess(msg) { showAlert('success', 'Éxito', msg || 'Operación completada.'); }
+        function openModal(id) { document.getElementById(id)?.classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id)?.classList.add('hidden'); }
+        function setButtonLoading(btn, textEl, loaderEl, loading) {
+            if (!btn || !textEl || !loaderEl) return;
+            btn.disabled = loading;
+            if (loading) {
+                textEl.classList.add('hidden');
+                loaderEl.classList.remove('hidden');
+            } else {
+                textEl.classList.remove('hidden');
+                loaderEl.classList.add('hidden');
+            }
+        }
+
+        let usersData = { content: [], totalPages: 0, number: 0 };
+        let currentUsersPage = 1;
+        let currentSearchTerm = '';
+        const usersPerPage = 10;
+        let userGrowthChart = null;
+        let user2FAChart = null;
+
+        async function loadAdminUserData() {
+            try {
+                const response = await api('/api/auth/me', { auth: true });
+                const user = response.data || response;
+                document.getElementById('adminName').textContent = user.firstName || 'Admin';
+                document.getElementById('adminEmail').textContent = user.email;
+                document.getElementById('adminAvatar').innerHTML = (user.firstName || 'A').charAt(0).toUpperCase();
+            } catch (err) {
+                console.error("Error cargando admin:", err);
+            }
+        }
+
+        async function loadUsers(page = 1, search = '') {
+            const tableBody = document.getElementById('users-table-body');
+            currentUsersPage = page;
+            currentSearchTerm = search;
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-8">Cargando...</td></tr>';
+
+            try {
+                const url = `/api/admin/users?page=${page - 1}&size=${usersPerPage}&search=${encodeURIComponent(search)}`;
+                const response = await api(url, { auth: true });
+                usersData = response.data || response;
+
+                renderUsersTable();
+                renderUsersPagination();
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('adminContent').classList.remove('hidden');
+            } catch (err) {
+                console.error("Error cargando usuarios:", err);
+                showError(`Error al cargar usuarios: ${err.message}`);
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-8">Error al cargar: ${err.message}</td></tr>`;
+            }
+        }
+
+        function renderUsersTable() {
+            const tableBody = document.getElementById('users-table-body');
+            if (!usersData || !usersData.content || usersData.content.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-8">No se encontraron usuarios.</td></tr>';
+                return;
+            }
+
+            tableBody.innerHTML = usersData.content.map(user => {
+                let statusBadge = '';
+                if (user.deletedAt) {
+                    statusBadge = `<span class="badge badge-gray">Eliminado</span>`;
+                } else if (user.enabled) {
+                    statusBadge = `<span class="badge badge-green">Activo</span>`;
+                } else {
+                    statusBadge = `<span class="badge badge-red">Bloqueado</span>`;
+                }
+
+                const safeUserName = (user.firstName + ' ' + user.lastName).replace(/'/g, "\\'");
+                let actions = '';
+
+                if (!user.enabled && !user.deletedAt) {
+                    actions += `<button onclick="activateUser(${user.id})" class="px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded shadow transition"><i class="bi bi-check-circle-fill"></i> Activar</button>`;
+                }
+                if (user.enabled && !user.deletedAt) {
+                    actions += `<button onclick="openBlockModal(${user.id}, '${safeUserName}')" class="px-3 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded shadow transition"><i class="bi bi-shield-lock-fill"></i> Bloquear</button>`;
+                }
+                if (!user.deletedAt) {
+                    actions += `<button onclick="openMessageModal(${user.id}, '${safeUserName}')" class="px-3 py-1 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded shadow transition ml-2"><i class="bi bi-envelope-fill"></i> Mensaje</button>`;
+                }
+
+                return `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.firstName || ''} ${user.lastName || ''}</td>
+                        <td>${user.email || 'N/A'}</td>
+                        <td>${statusBadge}</td>
+                        <td class="space-x-2">${actions || '<span class="text-xs text-gray-400">N/A</span>'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderUsersPagination() {
+            const paginationDiv = document.getElementById('users-pagination-controls');
+            const totalPages = usersData.totalPages || 0;
+            const currentPage = (usersData.number || 0) + 1;
+
+            if (totalPages <= 1) {
+                paginationDiv.innerHTML = '';
+                return;
+            }
+
+            let html = `<button onclick="changeUsersPage(1)" ${currentPage === 1 ? 'disabled' : ''}><i class="bi bi-chevron-double-left"></i></button>`;
+            html += `<button onclick="changeUsersPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}><i class="bi bi-chevron-left"></i></button>`;
+
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+
+            if (startPage > 1) {
+                html += '<button onclick="changeUsersPage(1)">1</button>';
+                if (startPage > 2) html += '<span class="px-2">...</span>';
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button onclick="changeUsersPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += '<span class="px-2">...</span>';
+                html += `<button onclick="changeUsersPage(${totalPages})">${totalPages}</button>`;
+            }
+
+            html += `<button onclick="changeUsersPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}><i class="bi bi-chevron-right"></i></button>`;
+            html += `<button onclick="changeUsersPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}><i class="bi bi-chevron-double-right"></i></button>`;
+
+            paginationDiv.innerHTML = html;
+        }
+
+        window.changeUsersPage = function (page) {
+            if (!usersData || page < 1 || page > usersData.totalPages) return;
+            loadUsers(page, currentSearchTerm);
+        };
+
+        window.activateUser = async function (userId) {
+            try {
+                await api(`/api/admin/users/${userId}/enable`, { method: 'PUT', auth: true });
+                showSuccess(`Usuario ${userId} activado.`);
+                loadUsers(currentUsersPage, currentSearchTerm);
+            } catch (err) {
+                showError(`Error al activar: ${err.message}`);
+            }
+        };
+
+        window.openBlockModal = function (userId, userName) {
+            document.getElementById('blockUserId').value = userId;
+            document.getElementById('blockUserName').textContent = userName || `ID ${userId}`;
+            document.getElementById('blockForm').reset();
+            openModal('blockModal');
+        };
+
+        window.openMessageModal = function (userId, userName) {
+            document.getElementById('messageUserId').value = userId;
+            document.getElementById('messageUserName').textContent = userName || `ID ${userId}`;
+            document.getElementById('messageForm').reset();
+            document.getElementById('messageSubject').value = "Notificación de tu cuenta EnOne";
+            openModal('messageModal');
+        };
+
+        function renderUserGrowthChart(statsData) {
+            const canvas = document.getElementById('chart-user-growth');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (userGrowthChart) userGrowthChart.destroy();
+
+            const labels = Object.keys(statsData);
+            const values = Object.values(statsData);
+
+            userGrowthChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.map(dateStr => {
+                        const parts = dateStr.split('-');
+                        return `${parts[2]}/${parts[1]}`;
+                    }),
+                    datasets: [{
+                        label: 'Nuevos Usuarios',
+                        data: values,
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+        }
+
+        function render2FAChart(enabledCount, disabledCount) {
+            const canvas = document.getElementById('chart-2fa-status');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (user2FAChart) user2FAChart.destroy();
+
+            const total = enabledCount + disabledCount;
+            if (total === 0) {
+                canvas.parentElement.innerHTML = '<p class="text-center text-gray-500 py-8">No hay usuarios activos</p>';
+                return;
+            }
+
+            user2FAChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [`Activado (${enabledCount})`, `Desactivado (${disabledCount})`],
+                    datasets: [{
+                        data: [enabledCount, disabledCount],
+                        backgroundColor: ['#10b981', '#e5e7eb'],
+                        borderWidth: 3,
+                        borderColor: '#ffffff',
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('adminLogout').addEventListener('click', () => {
+                clearToken();
+                location.href = 'login.html';
+            });
+
+            document.getElementById('searchButton').addEventListener('click', () => {
+                loadUsers(1, document.getElementById('searchInput').value.trim());
+            });
+
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    loadUsers(1, document.getElementById('searchInput').value.trim());
+                }
+            });
+
+            document.getElementById('messageForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const userId = document.getElementById('messageUserId').value;
+                const subject = document.getElementById('messageSubject').value;
+                const body = document.getElementById('messageBody').value;
+                const btn = document.getElementById('sendMessageBtn');
+                const txt = document.getElementById('sendMessageBtnText');
+                const ldr = document.getElementById('sendMessageBtnLoader');
+
+                setButtonLoading(btn, txt, ldr, true);
+                try {
+                    await api(`/api/admin/users/${userId}/message`, {
+                        method: 'POST',
+                        auth: true,
+                        body: { subject, message: body }
+                    });
+                    showSuccess('Mensaje enviado.');
+                    closeModal('messageModal');
+                } catch (err) {
+                    showError(`Error al enviar: ${err.message}`);
+                } finally {
+                    setButtonLoading(btn, txt, ldr, false);
+                }
+            });
+
+            document.getElementById('blockForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const userId = document.getElementById('blockUserId').value;
+                const reason = document.getElementById('blockReason').value;
+                const btn = document.getElementById('blockUserBtn');
+                const txt = document.getElementById('blockUserBtnText');
+                const ldr = document.getElementById('blockUserBtnLoader');
+
+                setButtonLoading(btn, txt, ldr, true);
+                try {
+                    await api(`/api/admin/users/${userId}/block`, {
+                        method: 'PUT',
+                        auth: true,
+                        body: { reason: reason.trim() }
+                    });
+                    showSuccess('Usuario bloqueado.');
+                    closeModal('blockModal');
+                    loadUsers(currentUsersPage, currentSearchTerm);
+                } catch (err) {
+                    showError(`Error al bloquear: ${err.message}`);
+                } finally {
+                    setButtonLoading(btn, txt, ldr, false);
+                }
+            });
+
+            loadAdminUserData();
+            loadUsers();
+
+            (async () => {
+                try {
+                    const [growthData, statsData] = await Promise.all([
+                        api('/api/admin/stats/user-growth?days=30', { auth: true }).catch(e => null),
+                        api('/api/admin/dashboard-stats', { auth: true }).catch(e => null)
+                    ]);
+
+                    if (growthData) {
+                        const data = growthData.data || growthData;
+                        renderUserGrowthChart(data);
+                    }
+
+                    if (statsData) {
+                        const data = statsData.data || statsData;
+                        if (data.twoFactorEnabledCount !== undefined) {
+                            render2FAChart(data.twoFactorEnabledCount, data.twoFactorDisabledCount || 0);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error cargando estadísticas:", err);
+                }
+            })();
+        });
+    </script>
+</body>
+
+</html>

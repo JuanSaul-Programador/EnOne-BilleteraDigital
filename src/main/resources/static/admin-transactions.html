@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Transacciones - Admin EnOne</title>
+
+    <script>
+        (function () {
+            'use strict';
+            function getToken() { return localStorage.getItem('token'); }
+            function isTokenExpired(token) { try { const payload = JSON.parse(atob(token.split('.')[1])); return Date.now() >= payload.exp * 1000; } catch (e) { return true; } }
+            function getRolesFromToken(token) { try { const payload = JSON.parse(atob(token.split('.')[1])); return payload.roles || []; } catch (e) { return []; } }
+            function isAdmin(roles) { return Array.isArray(roles) && roles.includes('ADMIN'); }
+            const token = getToken();
+            if (!token || isTokenExpired(token) || !isAdmin(getRolesFromToken(token))) {
+                alert('⛔ Acceso Denegado');
+                window.location.href = 'login.html';
+                throw new Error("Acceso denegado");
+            }
+        })();
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 256px;
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            color: #d1d5db;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            background-color: #f9fafb;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 1px solid #374151;
+        }
+
+        .sidebar-logo {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #3b82f6;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .admin-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: #d1d5db;
+            margin: 0 0.5rem;
+        }
+
+        .admin-link:hover {
+            background-color: #374151;
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .admin-link.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .admin-link i {
+            font-size: 1.25rem;
+        }
+
+        .chart-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            border: 1px solid #e5e7eb;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #ef4444;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .transaction-item {
+            border-left: 4px solid #e2e8f0;
+            transition: all 0.2s ease;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+        }
+
+        .transaction-item:hover {
+            background-color: #f8fafc;
+            border-left-color: #3b82f6;
+        }
+
+        .transaction-item.deposit {
+            border-left-color: #10b981;
+        }
+
+        .transaction-item.transfer {
+            border-left-color: #3b82f6;
+        }
+
+        .transaction-item.convert {
+            border-left-color: #8b5cf6;
+        }
+
+        .transaction-item.withdraw {
+            border-left-color: #ef4444;
+        }
+
+        .heatmap-cell {
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            position: relative;
+        }
+
+        .spinner-large {
+            border: 4px solid rgba(59, 130, 246, 0.3);
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .swal2-popup {
+            background: #1e40af !important;
+            color: #f3f4f6 !important;
+        }
+
+        .swal2-title {
+            color: #f3f4f6 !important;
+        }
+
+        .swal2-html-container {
+            color: #e5e7eb !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <span class="sidebar-logo">E1</span>
+                <span class="sidebar-title">Admin Panel</span>
+            </div>
+            <nav class="flex-grow p-4 space-y-2">
+                <a href="dashboardAdmin.html" class="admin-link">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="admin-users.html" class="admin-link">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Usuarios</span>
+                </a>
+                <a href="admin-transactions.html" class="admin-link active">
+                    <i class="bi bi-list-ul"></i>
+                    <span>Transacciones</span>
+                </a>
+            </nav>
+            <div class="p-4 border-t border-gray-700">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white font-bold flex items-center justify-center shadow-lg"
+                        id="adminAvatar">A</div>
+                    <div>
+                        <div class="font-semibold text-white" id="adminName">Admin</div>
+                        <div class="text-sm text-gray-400" id="adminEmail">admin@enone.com</div>
+                    </div>
+                </div>
+                <a href="#" id="adminLogout"
+                    class="admin-link !bg-gradient-to-r !from-red-600 !to-red-700 !text-white hover:!from-red-700 hover:!to-red-800 !shadow-lg">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>Cerrar Sesión</span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="p-8">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard de Transacciones</h1>
+                    <p class="text-gray-600">Monitoreo en tiempo real de la actividad transaccional</p>
+                </div>
+
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <span class="live-indicator">
+                                <span class="live-dot"></span>
+                                EN VIVO
+                            </span>
+                            <h2 class="text-xl font-bold text-gray-900">Métricas en Tiempo Real</h2>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-500">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            <span>Actualizado: <span id="lastUpdated">--:--</span></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="metric-card">
+                            <div class="relative z-10">
+                                <div class="flex items-center justify-between mb-2">
+                                    <i class="bi bi-cash-stack text-2xl"></i>
+                                    <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded">HOY</span>
+                                </div>
+                                <div class="text-2xl font-bold" id="todayVolume">S/ 0.00</div>
+                                <div class="text-sm opacity-80">Volumen Procesado</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <div class="relative z-10">
+                                <div class="flex items-center justify-between mb-2">
+                                    <i class="bi bi-speedometer text-2xl"></i>
+                                    <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded">LIVE</span>
+                                </div>
+                                <div class="text-2xl font-bold" id="txPerMinute">0.0</div>
+                                <div class="text-sm opacity-80">TX por Minuto</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <div class="relative z-10">
+                                <div class="flex items-center justify-between mb-2">
+                                    <i class="bi bi-activity text-2xl"></i>
+                                    <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded">ESTADO</span>
+                                </div>
+                                <div class="text-lg font-bold" id="systemStatus">OPERACIONAL</div>
+                                <div class="text-sm opacity-80">Sistema</div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <div class="relative z-10">
+                                <div class="flex items-center justify-between mb-2">
+                                    <i class="bi bi-graph-up text-2xl"></i>
+                                    <span class="text-xs bg-white bg-opacity-20 px-2 py-1 rounded">TOTAL</span>
+                                </div>
+                                <div class="text-2xl font-bold" id="totalTxToday">0</div>
+                                <div class="text-sm opacity-80">TX Hoy</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2">
+                        <div class="chart-card">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                    <i class="bi bi-clock-history text-blue-600"></i>
+                                    Últimas Transacciones
+                                </h3>
+                                <button id="refreshTransactions" class="text-blue-600 hover:text-blue-800 transition">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </button>
+                            </div>
+
+                            <div id="recentTransactionsList" class="space-y-3">
+                                <div class="text-center py-8 text-gray-500">
+                                    <i class="bi bi-hourglass-split text-3xl mb-2 block"></i>
+                                    Cargando transacciones...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-1">
+                        <div class="chart-card">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <i class="bi bi-pie-chart text-purple-600"></i>
+                                Tipos de Transacción (Hoy)
+                            </h3>
+                            <div class="chart-container">
+                                <canvas id="transactionTypesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <div class="chart-card">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <i class="bi bi-grid-3x3-gap text-orange-600"></i>
+                                Mapa de Calor de Actividad
+                            </h3>
+                            <div class="flex items-center gap-2">
+                                <select id="heatmapDays" class="border border-gray-300 rounded-lg px-3 py-1 text-sm">
+                                    <option value="7">Últimos 7 días</option>
+                                    <option value="14">Últimos 14 días</option>
+                                    <option value="30">Últimos 30 días</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-8">
+                            <h4 class="text-sm font-medium text-gray-700 mb-3">Actividad por Hora del Día</h4>
+                            <div class="grid grid-cols-12 gap-1 mb-2" id="hourlyHeatmap"></div>
+                            <div class="flex justify-between text-xs text-gray-500">
+                                <span>00:00</span>
+                                <span>06:00</span>
+                                <span>12:00</span>
+                                <span>18:00</span>
+                                <span>23:59</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-700 mb-3">Actividad por Día de la Semana</h4>
+                            <div class="grid grid-cols-7 gap-2 mb-2" id="weeklyHeatmap"></div>
+                            <div class="grid grid-cols-7 gap-2 text-xs text-gray-500 text-center">
+                                <span>Dom</span>
+                                <span>Lun</span>
+                                <span>Mar</span>
+                                <span>Mié</span>
+                                <span>Jue</span>
+                                <span>Vie</span>
+                                <span>Sáb</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-blue-600" id="peakHour">--:--</div>
+                                <div class="text-sm text-gray-500">Hora Pico</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600" id="maxActivity">0</div>
+                                <div class="text-sm text-gray-500">Máx. Transacciones</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-purple-600" id="avgPerHour">0.0</div>
+                                <div class="text-sm text-gray-500">Promedio/Hora</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script>
+        function showAlert(icon, title, text) {
+            Swal.fire({ icon, title, text, toast: true, position: 'top-end', showConfirmButton: false, timer: 5000, timerProgressBar: true, background: '#1e40af', color: '#f3f4f6' });
+        }
+        function showError(msg) { showAlert('error', 'Error', msg || 'Error inesperado'); }
+
+        let transactionTypesChart = null;
+        let refreshInterval = null;
+
+        async function loadAdminUserData() {
+            try {
+                const response = await api('/api/auth/me', { auth: true });
+                const user = response.data || response;
+                document.getElementById('adminName').textContent = user.firstName || 'Admin';
+                document.getElementById('adminEmail').textContent = user.email;
+                document.getElementById('adminAvatar').innerHTML = (user.firstName || 'A').charAt(0).toUpperCase();
+            } catch (err) {
+                console.error("Error cargando admin:", err);
+            }
+        }
+
+        async function loadRealtimeStats() {
+            try {
+                const response = await api('/api/admin/stats/realtime-transactions', { auth: true });
+                const data = response.data || response;
+
+                document.getElementById('todayVolume').textContent = formatCurrency(data.todayVolume || 0);
+                document.getElementById('txPerMinute').textContent = (data.transactionsPerMinute || 0).toFixed(1);
+                document.getElementById('systemStatus').textContent = data.systemStatus || 'OPERACIONAL';
+
+                const totalTx = Object.values(data.transactionsByType || {}).reduce((sum, count) => sum + count, 0);
+                document.getElementById('totalTxToday').textContent = totalTx;
+
+                const lastUpdated = new Date(data.lastUpdated || Date.now());
+                document.getElementById('lastUpdated').textContent = lastUpdated.toLocaleTimeString();
+
+                renderRecentTransactions(data.recentTransactions || []);
+                renderTransactionTypesChart(data.transactionsByType || {});
+            } catch (error) {
+                console.error('Error loading realtime stats:', error);
+                showError('Error al cargar estadísticas en tiempo real');
+            }
+        }
+
+        function renderRecentTransactions(transactions) {
+            const container = document.getElementById('recentTransactionsList');
+
+            if (transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="bi bi-inbox text-3xl mb-2 block"></i>
+                        No hay transacciones recientes
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = transactions.map(tx => `
+                <div class="transaction-item ${(tx.type || '').toLowerCase()} p-4 rounded-lg border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                                ${getTransactionIcon(tx.type)}
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-900">#${tx.id}</div>
+                                <div class="text-sm text-gray-500">${tx.description || 'Sin descripción'}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-gray-900">
+                                ${tx.currency} ${formatNumber(tx.amount)}
+                            </div>
+                            <div class="text-sm text-gray-500">
+                                ${formatTime(tx.createdAt)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTransactionTypesChart(data) {
+            const canvas = document.getElementById('transactionTypesChart');
+            const ctx = canvas.getContext('2d');
+
+            if (transactionTypesChart) {
+                transactionTypesChart.destroy();
+            }
+
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+            const colors = {
+                'DEPOSIT': '#10b981',
+                'TRANSFER': '#3b82f6',
+                'CONVERT': '#8b5cf6',
+                'WITHDRAW': '#ef4444'
+            };
+
+            if (labels.length === 0) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '14px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText('No hay datos', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+
+            transactionTypesChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.map(formatTransactionType),
+                    datasets: [{
+                        data: values,
+                        backgroundColor: labels.map(type => colors[type] || '#6b7280'),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadActivityHeatmap(days) {
+            try {
+                const response = await api(`/api/admin/stats/activity-heatmap?days=${days}`, { auth: true });
+                const data = response.data || response;
+
+                renderHourlyHeatmap(data.hourlyActivity || []);
+                renderWeeklyHeatmap(data.weeklyActivity || []);
+
+                document.getElementById('peakHour').textContent = `${data.peakHour || 0}:00`;
+                document.getElementById('maxActivity').textContent = data.maxActivity || 0;
+                document.getElementById('avgPerHour').textContent = (data.averagePerHour || 0).toFixed(1);
+            } catch (error) {
+                console.error('Error loading activity heatmap:', error);
+                showError('Error al cargar mapa de calor');
+            }
+        }
+
+        function renderHourlyHeatmap(hourlyData) {
+            const container = document.getElementById('hourlyHeatmap');
+            const maxValue = Math.max(...hourlyData, 1);
+
+            container.innerHTML = '';
+
+            for (let hour = 0; hour < 24; hour++) {
+                const value = hourlyData[hour] || 0;
+                const intensity = value / maxValue;
+                const opacity = Math.max(0.1, intensity);
+
+                const cell = document.createElement('div');
+                cell.className = 'heatmap-cell h-8 flex items-center justify-center text-xs font-medium rounded';
+                cell.style.backgroundColor = `rgba(59, 130, 246, ${opacity})`;
+                cell.style.color = intensity > 0.5 ? 'white' : '#374151';
+                cell.textContent = hour.toString().padStart(2, '0');
+                cell.title = `${hour.toString().padStart(2, '0')}:00 - ${value} transacciones`;
+
+                container.appendChild(cell);
+            }
+        }
+
+        function renderWeeklyHeatmap(weeklyData) {
+            const container = document.getElementById('weeklyHeatmap');
+            const maxValue = Math.max(...weeklyData, 1);
+            const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+            container.innerHTML = '';
+
+            for (let day = 0; day < 7; day++) {
+                const value = weeklyData[day] || 0;
+                const intensity = value / maxValue;
+                const opacity = Math.max(0.1, intensity);
+
+                const cell = document.createElement('div');
+                cell.className = 'heatmap-cell h-16 flex flex-col items-center justify-center text-xs font-medium rounded-lg';
+                cell.style.backgroundColor = `rgba(34, 197, 94, ${opacity})`;
+                cell.style.color = intensity > 0.5 ? 'white' : '#374151';
+                cell.innerHTML = `
+                    <div class="font-bold text-lg">${value}</div>
+                    <div class="text-xs opacity-75">${dayNames[day]}</div>
+                `;
+                cell.title = `${dayNames[day]} - ${value} transacciones`;
+
+                container.appendChild(cell);
+            }
+        }
+
+        function getTransactionIcon(type) {
+            const icons = {
+                'DEPOSIT': '<i class="bi bi-cash-stack text-green-600"></i>',
+                'TRANSFER': '<i class="bi bi-arrow-up-circle text-blue-600"></i>',
+                'CONVERT': '<i class="bi bi-arrow-left-right text-purple-600"></i>',
+                'WITHDRAW': '<i class="bi bi-box-arrow-down text-red-600"></i>'
+            };
+            return icons[type] || '<i class="bi bi-question-circle text-gray-600"></i>';
+        }
+
+        function formatTransactionType(type) {
+            const types = {
+                'DEPOSIT': 'Depósitos',
+                'TRANSFER': 'Transferencias',
+                'CONVERT': 'Conversiones',
+                'WITHDRAW': 'Retiros'
+            };
+            return types[type] || type;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-PE', {
+                style: 'currency',
+                currency: 'PEN'
+            }).format(amount);
+        }
+
+        function formatNumber(number) {
+            return new Intl.NumberFormat('es-PE').format(number);
+        }
+
+        function formatTime(timestamp) {
+            const milliseconds = timestamp < 10000000000 ? timestamp * 1000 : timestamp;
+            const date = new Date(milliseconds);
+            return date.toLocaleTimeString('es-PE', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+                timeZone: 'America/Lima'
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('adminLogout').addEventListener('click', () => {
+                clearToken();
+                location.href = 'login.html';
+            });
+
+            document.getElementById('refreshTransactions').addEventListener('click', loadRealtimeStats);
+            document.getElementById('heatmapDays').addEventListener('change', (e) => {
+                loadActivityHeatmap(parseInt(e.target.value));
+            });
+
+            loadAdminUserData();
+            loadRealtimeStats();
+            loadActivityHeatmap(7);
+
+            refreshInterval = setInterval(loadRealtimeStats, 30000);
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (refreshInterval) clearInterval(refreshInterval);
+        });
+    </script>
+</body>
+
+</html>

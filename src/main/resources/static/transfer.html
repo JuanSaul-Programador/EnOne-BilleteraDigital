@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enviar Dinero - EnOne</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="assets/css/wallet.css">
+</head>
+<body>
+    <nav class="nav-card sticky top-0 z-50 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="text-3xl font-bold glow-blue flex items-center gap-3">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg">
+                        <i class="bi bi-wallet-fill text-xl"></i>
+                    </div>
+                    EnOne
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="wallet.html"
+                        class="text-blue-600 hover:text-blue-800 border-b-2 border-blue-500 pb-2 hidden sm:flex items-center gap-2 font-semibold transition-all">
+                        <i class="bi bi-house-door-fill"></i> Inicio
+                    </a>
+                    <a href="profile.html"
+                        class="text-gray-600 hover:text-blue-600 transition-all hidden sm:flex items-center gap-2 font-medium">
+                        <i class="bi bi-person-circle"></i> Perfil
+                    </a>
+                    <a href="faq.html"
+                        class="text-gray-600 hover:text-blue-600 transition-all hidden sm:flex items-center gap-2 font-medium">
+                        <i class="bi bi-question-circle"></i> FAQ
+                    </a>
+                    <span id="headerName" class="text-gray-700 font-semibold hidden md:inline">-</span>
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-bold flex items-center justify-center shadow-lg"
+                        id="userAvatar">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <button
+                        class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        id="logout">
+                        <i class="bi bi-box-arrow-right"></i> Salir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10 mb-8">
+        <div id="loading" class="flex flex-col items-center justify-center" style="height: calc(100vh - 150px);">
+            <div
+                class="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mb-6 shadow-2xl">
+                <div class="spinner-large border-white"></div>
+            </div>
+            <div class="text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Preparando transferencia</h3>
+                <p class="text-gray-600">Cargando información de tu wallet...</p>
+                <div class="flex justify-center gap-1 mt-4">
+                    <div class="pulse-dot"></div>
+                    <div class="pulse-dot"></div>
+                    <div class="pulse-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content" class="hidden">
+            <!-- Header de la página -->
+            <div class="text-center mb-12">
+                <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                    <i class="bi bi-send-fill text-4xl text-white"></i>
+                </div>
+                <h1 class="text-5xl font-black text-gray-800 mb-4 glow-blue">Enviar Dinero</h1>
+                <p class="text-gray-600 text-xl max-w-2xl mx-auto">Transfiere dinero de forma rápida, segura y sin comisiones entre usuarios EnOne</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Formulario Principal -->
+                <div class="lg:col-span-2">
+                    <div class="enone-card p-8 rounded-3xl mb-8">
+                        <div class="flex items-center gap-3 mb-8">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg">
+                                <i class="bi bi-send-fill text-xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-gray-800">Datos de la Transferencia</h2>
+                        </div>
+
+                        <form id="formTransferStep1" class="space-y-6">
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-black flex items-center gap-2" for="transferTo">
+                                    <i class="bi bi-person-plus-fill"></i> Destinatario
+                                </label>
+                                <input type="text" class="w-full py-4 px-4 input-enone rounded-xl text-lg" id="transferTo" placeholder="correo@ejemplo.com o +51987654321" required>
+                                <p class="text-sm text-gray-600">Ingresa el <strong>email</strong> o <strong>teléfono</strong> del usuario registrado en EnOne</p>
+                                
+                                <!-- Validación visual del destinatario -->
+                                <div id="recipientValidation" class="hidden">
+                                    <div class="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                        <i class="bi bi-check-circle-fill text-green-600"></i>
+                                        <div>
+                                            <div class="font-semibold text-green-800" id="recipientName">-</div>
+                                            <div class="text-sm text-green-600">Usuario verificado ✓</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Error de validación -->
+                                <div id="recipientError" class="hidden">
+                                    <div class="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                        <i class="bi bi-exclamation-triangle-fill text-red-600"></i>
+                                        <div class="text-sm text-red-600" id="recipientErrorMsg">Usuario no encontrado</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-semibold text-black flex items-center gap-2" for="transferCurrency">
+                                        <i class="bi bi-currency-exchange"></i> Moneda
+                                    </label>
+                                    <select class="w-full py-4 px-4 input-enone rounded-xl text-lg" id="transferCurrency" required>
+                                        <option value="PEN">🇵🇪 Soles Peruanos (PEN)</option>
+                                        <option value="USD">🇺🇸 Dólares Americanos (USD)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-semibold text-black flex items-center gap-2" for="transferAmount">
+                                        <i class="bi bi-cash-stack"></i> Monto a enviar
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-gray-500" id="currencySymbol">S/</span>
+                                        <input type="number" step="0.01" min="0.01" class="w-full py-4 pl-12 pr-4 input-enone rounded-xl text-lg font-semibold" id="transferAmount" placeholder="100.00" required>
+                                    </div>
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                        <div class="text-sm text-blue-800 font-medium">
+                                            Saldo disponible: <span id="transferCurrencyLabel" class="font-bold">PEN</span> <span id="transferAvailableBalance" class="font-bold">Cargando...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-2">
+                                <label class="block text-sm font-semibold text-black flex items-center gap-2" for="transferDesc">
+                                    <i class="bi bi-chat-text-fill"></i> Descripción
+                                </label>
+                                <input type="text" class="w-full py-4 px-4 input-enone rounded-xl text-lg" id="transferDesc" placeholder="¿Para qué es esta transferencia?" required>
+                                <p class="text-sm text-gray-600">Agrega una descripción para identificar esta transferencia</p>
+                            </div>
+                            
+                            <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                                <a href="wallet.html" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-4 px-6 rounded-2xl transition-all flex items-center justify-center gap-2 border border-gray-300">
+                                    <i class="bi bi-arrow-left"></i> Cancelar
+                                </a>
+                                <button type="submit" class="flex-1 btn-primary font-semibold py-4 px-6 rounded-2xl flex items-center justify-center gap-2 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5" id="btnTransferContinue">
+                                    <i class="bi bi-arrow-right-circle-fill"></i> Continuar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Panel Lateral -->
+                <div class="lg:col-span-1">
+                    <div class="enone-card p-8 rounded-3xl">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white shadow-lg">
+                                <i class="bi bi-shield-check-fill text-xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">Transferencia Segura</h3>
+                        </div>
+                        <div class="space-y-4 text-sm text-gray-700">
+                            <div class="flex items-start gap-3">
+                                <i class="bi bi-check-circle-fill text-emerald-600 mt-0.5 text-lg"></i>
+                                <span>Encriptación de extremo a extremo</span>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <i class="bi bi-check-circle-fill text-emerald-600 mt-0.5 text-lg"></i>
+                                <span>Verificación de identidad automática</span>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <i class="bi bi-check-circle-fill text-emerald-600 mt-0.5 text-lg"></i>
+                                <span>Notificación instantánea al destinatario</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 space-y-4">
+                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-2xl p-6">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
+                                        <i class="bi bi-info-circle-fill text-lg"></i>
+                                    </div>
+                                    <div class="font-bold text-blue-800">Información</div>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="bg-white bg-opacity-60 rounded-xl p-3">
+                                        <div class="text-sm text-blue-800 font-medium mb-1">Comisión</div>
+                                        <div class="text-lg font-bold text-gray-800">S/ 0.00</div>
+                                        <div class="text-xs text-gray-600">Sin costo entre usuarios EnOne</div>
+                                    </div>
+                                    <div class="bg-white bg-opacity-60 rounded-xl p-3">
+                                        <div class="text-sm text-blue-800 font-medium mb-1">Tiempo de procesamiento</div>
+                                        <div class="text-lg font-bold text-gray-800">Instantáneo</div>
+                                        <div class="text-xs text-gray-600">El dinero llega inmediatamente</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/wallet.js"></script>
+</body>
+</html>

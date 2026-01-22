@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprobante - EnOne</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="assets/css/wallet.css">
+</head>
+
+<body>
+    <nav class="nav-card sticky top-0 z-50 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="text-3xl font-bold glow-blue flex items-center gap-3">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg">
+                        <i class="bi bi-wallet-fill text-xl"></i>
+                    </div>
+                    EnOne
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="wallet.html"
+                        class="text-blue-600 hover:text-blue-800 border-b-2 border-blue-500 pb-2 hidden sm:flex items-center gap-2 font-semibold transition-all">
+                        <i class="bi bi-house-door-fill"></i> Inicio
+                    </a>
+                    <a href="profile.html"
+                        class="text-gray-600 hover:text-blue-600 transition-all hidden sm:flex items-center gap-2 font-medium">
+                        <i class="bi bi-person-circle"></i> Perfil
+                    </a>
+                    <a href="faq.html"
+                        class="text-gray-600 hover:text-blue-600 transition-all hidden sm:flex items-center gap-2 font-medium">
+                        <i class="bi bi-question-circle"></i> FAQ
+                    </a>
+                    <span id="headerName" class="text-gray-700 font-semibold hidden md:inline">-</span>
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-bold flex items-center justify-center shadow-lg"
+                        id="userAvatar">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <button
+                        class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        id="logout">
+                        <i class="bi bi-box-arrow-right"></i> Salir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10 mb-8">
+        <div id="loading" class="flex flex-col items-center justify-center" style="height: calc(100vh - 150px);">
+            <div
+                class="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center mb-6 shadow-2xl">
+                <div class="spinner-large border-white"></div>
+            </div>
+            <div class="text-center">
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">Generando comprobante</h3>
+                <p class="text-gray-600">Preparando los detalles de tu operación...</p>
+                <div class="flex justify-center gap-1 mt-4">
+                    <div class="pulse-dot"></div>
+                    <div class="pulse-dot"></div>
+                    <div class="pulse-dot"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="content" class="hidden">
+
+            <div class="text-center mb-12">
+                <div class="w-24 h-24 rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mx-auto mb-6 shadow-2xl"
+                    id="pageIcon">
+                    <i class="bi bi-check-circle-fill text-4xl text-white"></i>
+                </div>
+                <h1 class="text-5xl font-black text-gray-800 mb-4 glow-blue" id="pageTitle">¡Operación Exitosa!</h1>
+                <p class="text-gray-600 text-xl max-w-2xl mx-auto" id="pageSubtitle">Tu transacción se ha procesado
+                    correctamente</p>
+            </div>
+
+            <div class="max-w-2xl mx-auto">
+                <div class="bg-white p-8 rounded-3xl shadow-2xl border border-gray-200">
+
+                    <div
+                        class="text-center mb-8 p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border-2 border-blue-200">
+                        <p class="text-base text-gray-600 mb-2" id="amountLabel">Monto</p>
+                        <p class="text-4xl font-black text-blue-600 mb-3 glow-blue" id="detailTxAmount">--.--</p>
+                        <div class="inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg"
+                            id="operationType">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span id="detailTxType">Operación</span>
+                        </div>
+                    </div>
+
+
+                    <div class="mb-6 hidden" id="securityCodeSection">
+                        <div
+                            class="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-200 rounded-xl p-4">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div
+                                    class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white shadow-md">
+                                    <i class="bi bi-shield-check-fill text-sm"></i>
+                                </div>
+                                <h3 class="text-lg font-bold text-amber-800">Código de Seguridad</h3>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-black text-amber-800 font-mono tracking-widest mb-2 bg-white bg-opacity-60 p-2 rounded-lg"
+                                    id="detailTxSecurityCode">------</div>
+                                <p class="text-amber-700 text-xs">Comparte este código para verificar la transacción</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="bg-gray-50 rounded-xl p-5 mb-6 border border-gray-200">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div
+                                class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
+                                <i class="bi bi-info-circle-fill text-sm"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-800">Detalles de la Transacción</h3>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center py-3 border-b border-gray-200"
+                                id="detailTxFromContainer" style="display: none;">
+                                <span class="text-gray-600 font-medium flex items-center gap-2">
+                                    <i class="bi bi-arrow-down-circle text-emerald-500"></i> Recibido de
+                                </span>
+                                <span class="text-gray-800 font-bold break-all text-right" id="detailTxFrom">-</span>
+                            </div>
+
+                            <div class="flex justify-between items-center py-3 border-b border-gray-200"
+                                id="detailTxToContainer" style="display: none;">
+                                <span class="text-gray-600 font-medium flex items-center gap-2">
+                                    <i class="bi bi-arrow-up-circle text-blue-500"></i> Enviado a
+                                </span>
+                                <span class="text-gray-800 font-bold break-all text-right" id="detailTxTo">-</span>
+                            </div>
+
+                            <div class="flex justify-between items-center py-3 border-b border-gray-200"
+                                id="detailTxIdContainer" style="display: none;">
+                                <span class="text-gray-600 font-medium flex items-center gap-2">
+                                    <i class="bi bi-hash text-purple-500"></i> Nro. de operación
+                                </span>
+                                <span class="text-gray-800 font-bold font-mono" id="detailTxId">-</span>
+                            </div>
+
+                            <div class="flex justify-between items-center py-3 border-b border-gray-200"
+                                id="detailTxUidContainer" style="display: none;">
+                                <span class="text-gray-600 font-medium flex items-center gap-2">
+                                    <i class="bi bi-fingerprint text-indigo-500"></i> ID Transacción
+                                </span>
+                                <span class="text-gray-800 font-bold font-mono text-sm" id="detailTxUid">-</span>
+                            </div>
+
+                            <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                                <span class="text-gray-600 font-medium flex items-center gap-2">
+                                    <i class="bi bi-calendar-event text-cyan-500"></i> Fecha y Hora
+                                </span>
+                                <span class="text-gray-800 font-bold" id="detailTxDate">-</span>
+                            </div>
+
+                            <div class="flex justify-between items-start py-3">
+                                <span class="text-gray-600 font-medium flex items-center gap-2 flex-shrink-0">
+                                    <i class="bi bi-chat-left-text text-yellow-500"></i> Descripción
+                                </span>
+                                <span class="text-gray-800 font-bold text-right break-words ml-4"
+                                    id="detailTxDesc">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="wallet.html"
+                            class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-4 px-6 rounded-2xl transition-all flex items-center justify-center gap-2 border border-gray-300">
+                            <i class="bi bi-house-door-fill"></i> Volver al Wallet
+                        </a>
+                        <button onclick="downloadVoucher()"
+                            class="flex-1 btn-primary font-semibold py-4 px-6 rounded-2xl flex items-center justify-center gap-2 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i class="bi bi-download"></i> Descargar Comprobante
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE = location.origin + '/enone';
+        function getToken() { return localStorage.getItem('token'); }
+        function clearToken() { localStorage.removeItem('token'); sessionStorage.removeItem('transferData'); sessionStorage.removeItem('voucherData'); }
+
+        async function api(path, { method = 'GET', body = null, auth = false } = {}) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (auth) {
+                const t = getToken();
+                if (t) headers['Authorization'] = 'Bearer ' + t;
+                else { throw new Error("Token not found"); }
+            }
+            try {
+                const res = await fetch(BASE + path, { method, headers, body: body ? JSON.stringify(body) : null });
+                const txt = await res.text();
+                let data = {};
+                try {
+                    data = txt ? JSON.parse(txt) : {};
+                } catch (e) {
+                    console.error("JSON Error:", txt);
+                    if (!res.ok) throw new Error(txt || `HTTP ${res.status}`);
+                    data = { raw: txt };
+                }
+                if (!res.ok) {
+                    throw new Error(data.error || data.message || `HTTP ${res.status}`);
+                }
+                return data;
+            } catch (error) {
+                console.error("API Error:", method, path, error);
+                throw error;
+            }
+        }
+
+        function isTokenExpired() {
+            const token = getToken();
+            if (!token) return true;
+            try {
+                const p = JSON.parse(atob(token.split('.')[1]));
+                return Date.now() >= p.exp * 1000;
+            } catch (e) {
+                return true;
+            }
+        }
+
+        function showAlert(icon, title, text) {
+            Swal.fire({
+                icon, title, text,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true,
+                background: '#1e40af',
+                color: '#f3f4f6',
+                customClass: { popup: 'swal2-popup' }
+            });
+        }
+
+        function showError(msg) { showAlert('error', 'Error', msg || 'Error inesperado'); }
+        function showSuccess(msg) { showAlert('success', 'Éxito', msg || 'Operación realizada'); }
+        function showInfo(msg) { showAlert('info', 'Información', msg); }
+
+        async function loadUserData() {
+            try {
+                const user = await api('/api/auth/me', { auth: true });
+                if (user.firstName && user.lastName) {
+                    document.getElementById('headerName').textContent = `${user.firstName} ${user.lastName}`;
+                    document.getElementById('userAvatar').innerHTML = user.firstName.charAt(0).toUpperCase();
+                } else {
+                    document.getElementById('headerName').textContent = user.username || 'Usuario';
+                    document.getElementById('userAvatar').innerHTML = '<i class="bi bi-person-fill"></i>';
+                }
+            } catch (err) {
+                console.error("Error cargando datos de usuario:", err);
+                document.getElementById('headerName').textContent = "Error";
+            }
+        }
+
+        function showTransactionDetail(tx) {
+            if (!tx) return;
+
+            const pageIcon = document.getElementById('pageIcon');
+            const pageTitle = document.getElementById('pageTitle');
+            const pageSubtitle = document.getElementById('pageSubtitle');
+            const detailAmount = document.getElementById('detailTxAmount');
+            const detailType = document.getElementById('detailTxType');
+            const operationType = document.getElementById('operationType');
+            const amountLabel = document.getElementById('amountLabel');
+            const detailDate = document.getElementById('detailTxDate');
+            const detailDesc = document.getElementById('detailTxDesc');
+            const detailFromContainer = document.getElementById('detailTxFromContainer');
+            const detailFrom = document.getElementById('detailTxFrom');
+            const detailToContainer = document.getElementById('detailTxToContainer');
+            const detailTo = document.getElementById('detailTxTo');
+            const securityCodeSection = document.getElementById('securityCodeSection');
+            const detailSecurityCode = document.getElementById('detailTxSecurityCode');
+            const detailIdContainer = document.getElementById('detailTxIdContainer');
+            const detailId = document.getElementById('detailTxId');
+            const detailTxUidContainer = document.getElementById('detailTxUidContainer');
+            const detailTxUid = document.getElementById('detailTxUid');
+
+            const isPositive = ['DEPOSIT', 'TRANSFER_IN', 'CONVERT_IN'].includes(tx.type);
+            let iconClass = 'bi-check-circle-fill';
+            let iconColor = 'from-emerald-500 to-emerald-600';
+            let title = '¡Operación Exitosa!';
+            let subtitle = 'Tu transacción se ha procesado correctamente';
+
+
+            if (tx.type === 'DEPOSIT') {
+                iconClass = 'bi-plus-circle-fill';
+                iconColor = 'from-emerald-500 to-emerald-600';
+                title = '¡Depósito Exitoso!';
+                subtitle = 'Los fondos han sido agregados a tu wallet';
+                amountLabel.textContent = 'Monto depositado';
+                operationType.className = 'inline-flex items-center gap-2 bg-emerald-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg';
+            }
+            else if (tx.type === 'WITHDRAW') {
+                iconClass = 'bi-arrow-down-circle-fill';
+                iconColor = 'from-red-500 to-red-600';
+                title = '¡Retiro Exitoso!';
+                subtitle = 'Los fondos han sido enviados a tu tarjeta';
+                amountLabel.textContent = 'Monto retirado';
+                operationType.className = 'inline-flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg';
+            }
+            else if (tx.type === 'TRANSFER_IN') {
+                iconClass = 'bi-arrow-down-circle-fill';
+                iconColor = 'from-blue-500 to-blue-600';
+                title = '¡Dinero Recibido!';
+                subtitle = 'Has recibido una transferencia';
+                amountLabel.textContent = 'Monto recibido';
+                operationType.className = 'inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg';
+            }
+            else if (tx.type === 'TRANSFER_OUT') {
+                iconClass = 'bi-send-fill';
+                iconColor = 'from-purple-500 to-purple-600';
+                title = '¡Transferencia Enviada!';
+                subtitle = 'Tu dinero ha sido enviado exitosamente';
+                amountLabel.textContent = 'Monto enviado';
+                operationType.className = 'inline-flex items-center gap-2 bg-purple-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg';
+            }
+            else if (tx.type.includes('CONVERT')) {
+                iconClass = 'bi-arrow-repeat';
+                iconColor = 'from-indigo-500 to-indigo-600';
+                title = '¡Conversión Exitosa!';
+                subtitle = 'Tu dinero ha sido convertido';
+                amountLabel.textContent = 'Monto convertido';
+                operationType.className = 'inline-flex items-center gap-2 bg-indigo-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg';
+            }
+
+            const sign = isPositive ? '+' : '';
+            let typeText = (tx.type || 'N/A').replace(/_/g, ' ');
+            typeText = typeText.charAt(0).toUpperCase() + typeText.slice(1).toLowerCase();
+
+            // Formatear fecha
+            let formattedDate = 'Fecha inválida';
+            const dateValue = tx.createdAt;
+            let finalDate = null;
+            if (typeof dateValue === 'number' && dateValue > 0) {
+                finalDate = new Date(Math.floor(dateValue * 1000));
+            } else if (typeof dateValue === 'string') {
+                finalDate = new Date(dateValue);
+            }
+            if (finalDate && !isNaN(finalDate)) {
+                const opts = {
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    timeZone: 'America/Lima'
+                };
+                formattedDate = finalDate.toLocaleDateString('es-PE', opts).replace(/\./g, '');
+            }
+
+
+            pageIcon.className = `w-24 h-24 rounded-3xl bg-gradient-to-br ${iconColor} flex items-center justify-center mx-auto mb-6 shadow-2xl`;
+            pageIcon.innerHTML = `<i class="bi ${iconClass} text-4xl text-white"></i>`;
+            pageTitle.textContent = title;
+            pageSubtitle.textContent = subtitle;
+            detailAmount.textContent = `${sign}${tx.currency} ${Math.abs(tx.amount || 0).toFixed(2)}`;
+            detailType.textContent = typeText;
+            detailDate.textContent = formattedDate;
+            detailDesc.textContent = tx.description || 'Sin descripción';
+
+
+            detailFromContainer.style.display = 'none';
+            detailToContainer.style.display = 'none';
+            securityCodeSection.style.display = 'none';
+            detailIdContainer.style.display = 'none';
+            detailTxUidContainer.style.display = 'none';
+
+
+            if (tx.type === 'TRANSFER_IN' || tx.type === 'TRANSFER_OUT') {
+                detailId.textContent = tx.id ? String(tx.id).padStart(8, '0') : 'N/A';
+                detailIdContainer.style.display = 'flex';
+
+                if (tx.securityCode) {
+                    detailSecurityCode.textContent = tx.securityCode;
+                    securityCodeSection.style.display = 'block';
+                }
+
+                if (tx.type === 'TRANSFER_IN' && tx.fromUser) {
+                    detailFrom.textContent = tx.fromUser;
+                    detailFromContainer.style.display = 'flex';
+                } else if (tx.type === 'TRANSFER_OUT' && tx.toUser) {
+                    detailTo.textContent = tx.toUser;
+                    detailToContainer.style.display = 'flex';
+                }
+            } else {
+                detailTxUid.textContent = tx.transactionUid || 'N/A';
+                detailTxUidContainer.style.display = 'flex';
+            }
+
+
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('content').classList.remove('hidden');
+            }, 500);
+        }
+
+        async function downloadVoucher() {
+
+            const storedData = sessionStorage.getItem('voucherData');
+            let tx;
+
+            if (storedData) {
+                try {
+                    tx = JSON.parse(storedData);
+                } catch (e) {
+                    tx = {
+                        type: 'TRANSFER_OUT',
+                        amount: 150.00,
+                        currency: 'PEN',
+                        description: 'Transferencia de ejemplo',
+                        createdAt: Date.now() / 1000,
+                        toUser: 'usuario@ejemplo.com',
+                        id: 12345678,
+                        securityCode: '123456'
+                    };
+                }
+            } else {
+
+                const amountText = document.getElementById('detailTxAmount').textContent;
+                const typeText = document.getElementById('detailTxType').textContent;
+                const descText = document.getElementById('detailTxDesc').textContent;
+                const dateText = document.getElementById('detailTxDate').textContent;
+
+                tx = {
+                    type: 'TRANSFER_OUT',
+                    amount: parseFloat(amountText.replace(/[^\d.-]/g, '')) || 0,
+                    currency: amountText.includes('USD') ? 'USD' : 'PEN',
+                    description: descText || 'Transacción',
+                    createdAt: Date.now() / 1000,
+                    toUser: document.getElementById('detailTxTo') ? document.getElementById('detailTxTo').textContent : '',
+                    fromUser: document.getElementById('detailTxFrom') ? document.getElementById('detailTxFrom').textContent : '',
+                    id: document.getElementById('detailTxId') ? document.getElementById('detailTxId').textContent : '',
+                    transactionUid: document.getElementById('detailTxUid') ? document.getElementById('detailTxUid').textContent : '',
+                    securityCode: document.getElementById('detailTxSecurityCode') ? document.getElementById('detailTxSecurityCode').textContent : ''
+                };
+            }
+
+            const date = new Date().toISOString().split('T')[0];
+            const type = tx.type.toLowerCase().replace('_', '-');
+            const txId = tx.id || tx.transactionUid || 'voucher';
+            const filename = `comprobante-enone-${type}-${txId}-${date}.png`;
+
+            showInfo("Generando comprobante...");
+
+            try {
+
+                let formattedDate = 'Fecha inválida';
+                const dateValue = tx.createdAt;
+                let finalDate = null;
+                if (typeof dateValue === 'number' && dateValue > 0) {
+                    finalDate = new Date(Math.floor(dateValue * 1000));
+                } else if (typeof dateValue === 'string') {
+                    finalDate = new Date(dateValue);
+                }
+                if (finalDate && !isNaN(finalDate)) {
+                    const opts = {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        timeZone: 'America/Lima'
+                    };
+                    formattedDate = finalDate.toLocaleDateString('es-PE', opts).replace(/\./g, '');
+                }
+
+
+                const isPositive = ['DEPOSIT', 'TRANSFER_IN', 'CONVERT_IN'].includes(tx.type);
+                let title = '¡Operación Exitosa!';
+                let amountLabel = 'Monto';
+
+                if (tx.type === 'DEPOSIT') {
+                    title = '¡Depósito Exitoso!';
+                    amountLabel = 'Monto depositado';
+                } else if (tx.type === 'WITHDRAW') {
+                    title = '¡Retiro Exitoso!';
+                    amountLabel = 'Monto retirado';
+                } else if (tx.type === 'TRANSFER_IN') {
+                    title = '¡Dinero Recibido!';
+                    amountLabel = 'Monto recibido';
+                } else if (tx.type === 'TRANSFER_OUT') {
+                    title = '¡Transferencia Enviada!';
+                    amountLabel = 'Monto enviado';
+                } else if (tx.type.includes('CONVERT')) {
+                    title = '¡Conversión Exitosa!';
+                    amountLabel = 'Monto convertido';
+                }
+
+                const sign = isPositive ? '+' : '';
+                let typeText = (tx.type || 'N/A').replace(/_/g, ' ');
+                typeText = typeText.charAt(0).toUpperCase() + typeText.slice(1).toLowerCase();
+
+
+                const voucherHTML = `
+                    <div style="
+                        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                        background: white;
+                        padding: 40px;
+                        max-width: 500px;
+                        margin: 0 auto;
+                        border: 2px solid #e5e7eb;
+                        border-radius: 16px;
+                    ">
+                    
+                        <div style="text-align: center; margin-bottom: 30px;">
+                            <div style="
+                                width: 60px;
+                                height: 60px;
+                                background: #10b981;
+                                border-radius: 16px;
+                                display: inline-flex;
+                                align-items: center;
+                                justify-content: center;
+                                margin-bottom: 16px;
+                            ">
+                                <span style="color: white; font-size: 24px;">✓</span>
+                            </div>
+                            <h1 style="
+                                font-size: 28px;
+                                font-weight: 800;
+                                color: #1f2937;
+                                margin: 0 0 8px 0;
+                            ">${title}</h1>
+                            <p style="
+                                color: #6b7280;
+                                font-size: 16px;
+                                margin: 0;
+                            ">Comprobante de transacción</p>
+                        </div>
+
+                        
+                        <div style="
+                            text-align: center;
+                            background: #f8fafc;
+                            padding: 24px;
+                            border-radius: 12px;
+                            margin-bottom: 30px;
+                            border: 1px solid #e2e8f0;
+                        ">
+                            <p style="
+                                color: #64748b;
+                                font-size: 14px;
+                                margin: 0 0 8px 0;
+                                font-weight: 500;
+                            ">${amountLabel}</p>
+                            <p style="
+                                font-size: 36px;
+                                font-weight: 900;
+                                color: #1e40af;
+                                margin: 0 0 12px 0;
+                            ">${sign}${tx.currency} ${Math.abs(tx.amount || 0).toFixed(2)}</p>
+                            <span style="
+                                background: #1e40af;
+                                color: white;
+                                padding: 6px 16px;
+                                border-radius: 20px;
+                                font-size: 12px;
+                                font-weight: 600;
+                            ">${typeText}</span>
+                        </div>
+
+                        ${tx.securityCode ? `
+                        
+                        <div style="
+                            background: #fef3c7;
+                            border: 1px solid #f59e0b;
+                            border-radius: 12px;
+                            padding: 20px;
+                            margin-bottom: 30px;
+                            text-align: center;
+                        ">
+                            <h3 style="
+                                color: #92400e;
+                                font-size: 16px;
+                                font-weight: 700;
+                                margin: 0 0 12px 0;
+                            ">🛡️ Código de Seguridad</h3>
+                            <div style="
+                                font-family: 'Courier New', monospace;
+                                font-size: 24px;
+                                font-weight: 800;
+                                color: #92400e;
+                                background: white;
+                                padding: 12px;
+                                border-radius: 8px;
+                                letter-spacing: 4px;
+                            ">${tx.securityCode}</div>
+                        </div>
+                        ` : ''}
+
+                        
+                        <div style="
+                            background: #f9fafb;
+                            border: 1px solid #e5e7eb;
+                            border-radius: 12px;
+                            padding: 24px;
+                            margin-bottom: 30px;
+                        ">
+                            <h3 style="
+                                color: #374151;
+                                font-size: 16px;
+                                font-weight: 700;
+                                margin: 0 0 20px 0;
+                            ">📋 Detalles de la Transacción</h3>
+                            
+                            ${tx.type === 'TRANSFER_IN' && tx.fromUser ? `
+                            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                <span style="color: #6b7280; font-weight: 500;">Recibido de:</span>
+                                <span style="color: #1f2937; font-weight: 600;">${tx.fromUser}</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${tx.type === 'TRANSFER_OUT' && tx.toUser ? `
+                            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                <span style="color: #6b7280; font-weight: 500;">Enviado a:</span>
+                                <span style="color: #1f2937; font-weight: 600;">${tx.toUser}</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${(tx.type === 'TRANSFER_IN' || tx.type === 'TRANSFER_OUT') && tx.id ? `
+                            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                <span style="color: #6b7280; font-weight: 500;">Nro. de operación:</span>
+                                <span style="color: #1f2937; font-weight: 600; font-family: monospace;">${String(tx.id).padStart(8, '0')}</span>
+                            </div>
+                            ` : ''}
+                            
+                            ${tx.transactionUid && !(tx.type === 'TRANSFER_IN' || tx.type === 'TRANSFER_OUT') ? `
+                            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                <span style="color: #6b7280; font-weight: 500;">ID Transacción:</span>
+                                <span style="color: #1f2937; font-weight: 600; font-family: monospace; font-size: 12px;">${tx.transactionUid}</span>
+                            </div>
+                            ` : ''}
+                            
+                            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                <span style="color: #6b7280; font-weight: 500;">Fecha y Hora:</span>
+                                <span style="color: #1f2937; font-weight: 600;">${formattedDate}</span>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; padding: 12px 0 0 0;">
+                                <span style="color: #6b7280; font-weight: 500;">Descripción:</span>
+                                <span style="color: #1f2937; font-weight: 600;">${tx.description || 'Sin descripción'}</span>
+                            </div>
+                        </div>
+
+                        
+                        <div style="
+                            text-align: center;
+                            padding-top: 20px;
+                            border-top: 1px solid #e5e7eb;
+                        ">
+                            <p style="
+                                color: #9ca3af;
+                                font-size: 12px;
+                                font-weight: 600;
+                                margin: 0;
+                            ">EnOne - Comprobante Digital Verificado</p>
+                            <p style="
+                                color: #d1d5db;
+                                font-size: 10px;
+                                margin: 4px 0 0 0;
+                            ">Generado el ${new Date().toLocaleDateString('es-PE')}</p>
+                        </div>
+                    </div>
+                `;
+
+
+                const tempContainer = document.createElement('div');
+                tempContainer.style.cssText = `
+                    position: fixed;
+                    top: -9999px;
+                    left: -9999px;
+                    background: white;
+                    padding: 20px;
+                `;
+                tempContainer.innerHTML = voucherHTML;
+                document.body.appendChild(tempContainer);
+
+                const canvas = await html2canvas(tempContainer, {
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    logging: false
+                });
+
+                document.body.removeChild(tempContainer);
+
+                const imgData = canvas.toDataURL('image/png', 0.95);
+                const link = document.createElement('a');
+                link.href = imgData;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showSuccess("¡Comprobante descargado exitosamente!");
+
+            } catch (err) {
+                console.error("Error al generar imagen:", err);
+                showError("Error al generar la imagen del comprobante.");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            setTimeout(() => {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('content').classList.remove('hidden');
+            }, 1000);
+
+            if (isTokenExpired()) {
+                showError("Tu sesión ha expirado. Redirigiendo al login...");
+                clearToken();
+                setTimeout(() => { location.href = 'login.html'; }, 2000);
+                return;
+            }
+
+            loadUserData();
+
+            const storedData = sessionStorage.getItem('voucherData');
+            if (!storedData) {
+
+                const exampleTx = {
+                    type: 'TRANSFER_OUT',
+                    amount: 150.00,
+                    currency: 'PEN',
+                    description: 'Transferencia de ejemplo',
+                    createdAt: Date.now() / 1000,
+                    toUser: 'usuario@ejemplo.com',
+                    id: 12345678,
+                    securityCode: '123456'
+                };
+                showTransactionDetail(exampleTx);
+                showInfo("Mostrando comprobante de ejemplo");
+                return;
+            }
+
+            try {
+                const tx = JSON.parse(storedData);
+                sessionStorage.removeItem('voucherData');
+                showTransactionDetail(tx);
+                showSuccess('¡Comprobante generado exitosamente!');
+            } catch (e) {
+                console.error("Error al parsear datos del voucher:", e);
+                showError("Error al mostrar el comprobante. Redirigiendo...");
+                setTimeout(() => { location.href = 'wallet.html'; }, 2000);
+            }
+        });
+
+        document.getElementById('logout').addEventListener('click', () => {
+            showInfo('Cerrando sesión...');
+            clearToken();
+            setTimeout(() => { location.href = 'login.html'; }, 1000);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Wallet - EnOne</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="assets/css/wallet.css">
+
+</head>
+
+<body>
+    <nav class="nav-card sticky top-0 z-50 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="text-3xl font-bold glow-blue flex items-center gap-3">
+                    <div
+                        class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white shadow-lg">
+                        <i class="bi bi-wallet-fill text-xl"></i>
+                    </div>
+                    EnOne
+                </div>
+                <div class="flex items-center space-x-6">
+                    <a href="wallet.html"
+                        class="text-blue-600 hover:text-blue-800 border-b-2 border-blue-500 pb-2 hidden sm:flex items-center gap-2 font-semibold transition-all">
+                        <i class="bi bi-house-door-fill"></i> Inicio
+                    </a>
+                    <a href="profile.html"
+                        class="text-gray-600 hover:text-blue-600 transition-all hidden sm:flex items-center gap-2 font-medium">
+                        <i class="bi bi-person-circle"></i> Perfil
+                    </a>
+                    <a href="faq.html"
+                        class="text-gray-600 hover:text-blue-600 transition-all hidden sm:flex items-center gap-2 font-medium">
+                        <i class="bi bi-question-circle"></i> FAQ
+                    </a>
+                    <span id="headerName" class="text-gray-700 font-semibold hidden md:inline">-</span>
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white font-bold flex items-center justify-center shadow-lg"
+                        id="userAvatar">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <button
+                        class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        id="logout">
+                        <i class="bi bi-box-arrow-right"></i> Salir
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10 mb-8">
+        <div id="error" class="hidden"></div>
+        <div id="success" class="hidden"></div>
+        <div id="info" class="hidden"></div>
+
+        <div id="content">
+            <div class="flex flex-col sm:flex-row gap-6 mb-8">
+                <button class="wallet-selector wallet-card flex-1 p-6 rounded-2xl transition-all relative z-10"
+                    data-currency="PEN" id="walletPEN">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-white bg-opacity-20 flex items-center justify-center">
+                                <i class="bi bi-currency-exchange text-xl"></i>
+                            </div>
+                            <div class="text-sm font-medium opacity-90">Soles Peruanos</div>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                            <i class="bi bi-chevron-right text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold mb-2">PEN <span id="balancePEN">0.00</span></div>
+                    <div class="text-xs opacity-80 font-mono" id="walletNumberPEN">-</div>
+                </button>
+                <button class="wallet-selector wallet-card flex-1 p-6 rounded-2xl transition-all relative z-10"
+                    data-currency="USD" id="walletUSD">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-white bg-opacity-20 flex items-center justify-center">
+                                <i class="bi bi-currency-dollar text-xl"></i>
+                            </div>
+                            <div class="text-sm font-medium opacity-90">Dólares Americanos</div>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                            <i class="bi bi-chevron-right text-sm"></i>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold mb-2">USD <span id="balanceUSD">0.00</span></div>
+                    <div class="text-xs opacity-80 font-mono" id="walletNumberUSD">-</div>
+                </button>
+            </div>
+            <div class="wallet-card wallet-selected p-8 md:p-10 rounded-3xl mb-8 relative overflow-hidden">
+                <div
+                    class="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -translate-y-16 translate-x-16">
+                </div>
+                <div
+                    class="absolute bottom-0 left-0 w-24 h-24 bg-white bg-opacity-5 rounded-full translate-y-12 -translate-x-12">
+                </div>
+                <div class="flex justify-between items-start relative z-10">
+                    <div class="flex-grow">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-12 h-12 rounded-2xl bg-white bg-opacity-20 flex items-center justify-center">
+                                <i class="bi bi-wallet-fill text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium opacity-90">Saldo Principal</p>
+                                <p class="text-xs opacity-70" id="currentCurrencyLabel">Soles Peruanos</p>
+                            </div>
+                        </div>
+                        <div class="text-5xl md:text-6xl font-black mb-3 text-white drop-shadow-lg">
+                            <span id="currentCurrency" class="text-3xl md:text-4xl font-bold opacity-80">PEN</span>
+                            <span id="currentBalance">0.00</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm opacity-80">
+                            <i class="bi bi-credit-card-2-front-fill"></i>
+                            <span id="currentWalletNumber">-</span>
+                        </div>
+                    </div>
+                    <button
+                        class="bg-white bg-opacity-20 backdrop-blur-sm hover:bg-opacity-30 text-white font-semibold py-4 px-8 rounded-2xl transition-all flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                        id="btnTransfer">
+                        <i class="bi bi-send-fill text-lg"></i>
+                        <span>Transferir</span>
+                    </button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2">
+                    <div class="enone-card p-8 rounded-3xl mb-8">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-lg">
+                                <i class="bi bi-lightning-charge-fill text-xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">Acciones Rápidas</h3>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6">
+                            <button
+                                class="action-card flex flex-col items-center p-6 rounded-2xl transition-all cursor-pointer group"
+                                id="btnDeposit">
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white mb-4 shadow-lg group-hover:shadow-xl transition-all">
+                                    <i class="bi bi-plus-circle-fill text-2xl"></i>
+                                </div>
+                                <div
+                                    class="text-sm font-semibold text-gray-700 group-hover:text-green-600 transition-colors">
+                                    Depositar</div>
+                                <div class="text-xs text-gray-500 mt-1">Agregar fondos</div>
+                            </button>
+                            <button
+                                class="action-card flex flex-col items-center p-6 rounded-2xl transition-all cursor-pointer group"
+                                id="btnTransferQuick">
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white mb-4 shadow-lg group-hover:shadow-xl transition-all">
+                                    <i class="bi bi-send-fill text-2xl"></i>
+                                </div>
+                                <div
+                                    class="text-sm font-semibold text-gray-700 group-hover:text-blue-600 transition-colors">
+                                    Enviar</div>
+                                <div class="text-xs text-gray-500 mt-1">Transferir dinero</div>
+                            </button>
+                            <button
+                                class="action-card flex flex-col items-center p-6 rounded-2xl transition-all cursor-pointer group"
+                                id="btnWithdraw">
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white mb-4 shadow-lg group-hover:shadow-xl transition-all">
+                                    <i class="bi bi-arrow-down-circle-fill text-2xl"></i>
+                                </div>
+                                <div
+                                    class="text-sm font-semibold text-gray-700 group-hover:text-red-600 transition-colors">
+                                    Retirar</div>
+                                <div class="text-xs text-gray-500 mt-1">A tu tarjeta</div>
+                            </button>
+                            <button
+                                class="action-card flex flex-col items-center p-6 rounded-2xl transition-all cursor-pointer group"
+                                id="btnConvert">
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white mb-4 shadow-lg group-hover:shadow-xl transition-all">
+                                    <i class="bi bi-arrow-repeat text-2xl"></i>
+                                </div>
+                                <div
+                                    class="text-sm font-semibold text-gray-700 group-hover:text-purple-600 transition-colors">
+                                    Convertir</div>
+                                <div class="text-xs text-gray-500 mt-1">Cambiar moneda</div>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="enone-card p-8 rounded-3xl">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-white shadow-lg">
+                                    <i class="bi bi-activity text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-gray-800">Movimientos Recientes</h3>
+                                    <p class="text-sm text-gray-500">Moneda: <span id="currentCurrencyLabelShort"
+                                            class="font-semibold">PEN</span></p>
+                                </div>
+                            </div>
+                            <button
+                                class="text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-2 transition-all bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-xl"
+                                id="btnViewRecentDetails">
+                                Ver más <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                        <div id="transactionList" class="space-y-4">
+                            <div class="text-center py-12 text-gray-400">
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                                    <i class="bi bi-inbox text-2xl text-gray-400"></i>
+                                </div>
+                                <p class="font-medium">No hay transacciones</p>
+                                <p class="text-sm mt-1">Tus movimientos aparecerán aquí</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-1">
+                    <div class="enone-card p-8 rounded-3xl">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white shadow-lg">
+                                <i class="bi bi-wallet2 text-xl"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800">Mis Wallets</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div
+                                class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border-2 border-blue-200 transition-all hover:shadow-lg">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
+                                        <i class="bi bi-currency-exchange text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-blue-800">Wallet PEN</div>
+                                        <div class="text-xs text-blue-600">Soles Peruanos</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-blue-700 font-mono bg-white bg-opacity-60 p-2 rounded-lg"
+                                    id="walletInfoPEN">-</div>
+                            </div>
+                            <div
+                                class="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-2xl border-2 border-green-200 transition-all hover:shadow-lg">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white shadow-md">
+                                        <i class="bi bi-currency-dollar text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-green-800">Wallet USD</div>
+                                        <div class="text-xs text-green-600">Dólares Americanos</div>
+                                    </div>
+                                </div>
+                                <div class="text-sm text-green-700 font-mono bg-white bg-opacity-60 p-2 rounded-lg"
+                                    id="walletInfoUSD">-</div>
+                            </div>
+                        </div>
+
+
+                        <div class="mt-6">
+                            <button
+                                class="w-full action-card flex items-center justify-center gap-3 p-4 rounded-2xl transition-all cursor-pointer group"
+                                id="btnHistory">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all">
+                                    <i class="bi bi-clock-history text-lg"></i>
+                                </div>
+                                <div class="text-left">
+                                    <div
+                                        class="text-sm font-semibold text-gray-700 group-hover:text-amber-600 transition-colors">
+                                        Ver Historial Completo
+                                    </div>
+                                    <div class="text-xs text-gray-500 mt-0.5">Todos tus movimientos</div>
+                                </div>
+                                <div class="ml-auto">
+                                    <i
+                                        class="bi bi-chevron-right text-gray-400 group-hover:text-amber-600 transition-colors"></i>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fixed inset-0 p-4" id="modalDeposit">
+        <div class="modal-content enone-card p-6 rounded-2xl transform max-w-lg w-full m-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-blue-600 flex items-center gap-2">
+                    <i class="bi bi-cash-stack"></i> Depositar Dinero
+                </h3>
+                <button class="text-gray-400 hover:text-blue-600 text-2xl transition"
+                    onclick="closeModal('modalDeposit')">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </div>
+
+            <div id="noCardSection" class="p-4">
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 mb-6 text-center">
+                    <div
+                        class="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 text-amber-600">
+                        <i class="bi bi-credit-card-2-front text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-900 text-lg mb-1">Requiere Activación</h4>
+                    <p class="text-gray-600 text-sm mb-6">Para realizar depósitos, primero debes activar tu tarjeta
+                        virtual EnOne.</p>
+
+                    <button type="button"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 transition shadow-lg shadow-blue-200"
+                        id="btnActivateCard">
+                        <i class="bi bi-plus-lg"></i> Activar Tarjeta Ahora
+                    </button>
+                </div>
+            </div>
+
+            <div id="hasCardSection" style="display: none;">
+                <div class="bg-slate-800 bg-opacity-40 border-2 border-slate-600 rounded-xl p-4 mb-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="bi bi-credit-card-2-front-fill text-slate-300 text-2xl"></i>
+                            <div>
+                                <div class="text-sm text-slate-200 opacity-80">Tarjeta activa</div>
+                                <div class="font-semibold text-white" id="activatedCardNumber">**** **** **** ----</div>
+                            </div>
+                        </div>
+                        <button type="button" class="text-blue-500 hover:text-blue-400 text-sm font-medium transition"
+                            id="btnChangeCard">
+                            Cambiar
+                        </button>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-400 mb-4 flex items-center gap-2">
+                    <i class="bi bi-info-circle"></i> Los depósitos solo se realizan en Soles (PEN)
+                </p>
+
+                <form id="formDeposit">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
+                            <i class="bi bi-cash"></i> Monto (PEN)
+                        </label>
+                        <input type="number" step="0.01" min="1" class="w-full py-3 px-4 input-enone rounded-lg"
+                            id="depositAmount" placeholder="100.00" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
+                            <i class="bi bi-pencil"></i> Descripción (opcional)
+                        </label>
+                        <input type="text" class="w-full py-3 px-4 input-enone rounded-lg" id="depositDesc"
+                            placeholder="Recarga de cuenta">
+                    </div>
+                    <button type="submit"
+                        class="w-full btn-primary text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+                        id="btnDepositSubmit">
+                        <i class="bi bi-check-circle"></i> Depositar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fixed inset-0 p-4" id="modalWithdraw">
+        <div class="modal-content enone-card p-6 rounded-2xl transform max-w-lg w-full m-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-blue-600 flex items-center gap-2">
+                    <i class="bi bi-box-arrow-down"></i> Retirar Dinero
+                </h3>
+                <button class="text-gray-400 hover:text-blue-600 text-2xl transition"
+                    onclick="closeModal('modalWithdraw')">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </div>
+
+            <div id="withdrawCardSection">
+                <div class="bg-slate-800 bg-opacity-40 border-2 border-slate-600 rounded-xl p-4 mb-4">
+                    <div class="flex items-center gap-3">
+                        <i class="bi bi-credit-card-2-front-fill text-slate-300 text-2xl"></i>
+                        <div>
+                            <div class="text-sm text-slate-200 opacity-80">Retirar a tarjeta activa</div>
+                            <div class="font-semibold text-white" id="withdrawCardNumber">**** **** **** ----</div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-400 mb-4 flex items-center gap-2">
+                    <i class="bi bi-info-circle"></i> El dinero se enviará a tu tarjeta asociada en Soles (PEN).
+                </p>
+
+                <form id="formWithdraw">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
+                            <i class="bi bi-cash"></i> Monto a retirar (PEN)
+                        </label>
+                        <input type="number" step="0.01" min="1" class="w-full py-3 px-4 input-enone rounded-lg"
+                            id="withdrawAmount" placeholder="100.00" required>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-blue-600 mb-1 flex items-center gap-2">
+                            <i class="bi bi-pencil"></i> Descripción (opcional)
+                        </label>
+                        <input type="text" class="w-full py-3 px-4 input-enone rounded-lg" id="withdrawDesc"
+                            placeholder="Retiro a cuenta">
+                    </div>
+                    <button type="submit"
+                        class="w-full btn-primary text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+                        id="btnWithdrawSubmit">
+                        <i class="bi bi-check-circle"></i> Confirmar Retiro
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fixed inset-0 p-4" id="modalActivateCard">
+        <div class="modal-content enone-card p-6 rounded-2xl transform max-w-lg w-full m-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-blue-600 flex items-center gap-2">
+                    <i class="bi bi-credit-card-2-front"></i> Activar Tarjeta
+                </h3>
+                <button class="text-gray-400 hover:text-blue-600 text-2xl transition"
+                    onclick="closeModal('modalActivateCard')">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </div>
+
+            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5 mb-6">
+                <div class="flex items-start gap-4">
+                    <div
+                        class="min-w-[40px] h-[40px] rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                        <i class="bi bi-shield-lock text-xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-indigo-900 text-sm mb-1">Seguridad EnOne Garantizada</h4>
+                        <p class="text-indigo-700 text-xs leading-relaxed">Tus datos están protegidos con encriptación
+                            de nivel bancario. Esta tarjeta será vinculada exclusivamente a tu cuenta.</p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="formActivateCard" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Número de Tarjeta</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="bi bi-credit-card text-gray-400"></i>
+                        </div>
+                        <input type="text" maxlength="16"
+                            class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block transition-all font-mono"
+                            id="cardNumber" placeholder="0000 0000 0000 0000" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Vencimiento</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <i class="bi bi-calendar4 text-gray-400"></i>
+                            </div>
+                            <input type="text" maxlength="7"
+                                class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block transition-all"
+                                id="cardExpiry" placeholder="MM/AA" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">CVV</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <i class="bi bi-lock text-gray-400"></i>
+                            </div>
+                            <input type="text" maxlength="3"
+                                class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block transition-all tracking-widest"
+                                id="cardCVV" placeholder="123" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre del Titular</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <i class="bi bi-person text-gray-400"></i>
+                        </div>
+                        <input type="text"
+                            class="w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 block transition-all uppercase"
+                            id="cardHolder" placeholder="JUAN PEREZ" required>
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-200 hover:shadow-blue-300 transition-all transform active:scale-[0.98] flex items-center justify-center gap-2 mt-4"
+                    id="btnActivateCardSubmit">
+                    <i class="bi bi-check-lg text-lg"></i> Activar Tarjeta
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fixed inset-0 p-4" id="modalConvert">
+        <div class="modal-content enone-card p-6 rounded-2xl transform max-w-lg w-full m-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-blue-600 flex items-center gap-2"><i
+                        class="bi bi-arrow-left-right"></i> Convertir Moneda</h3>
+                <button class="text-gray-400 hover:text-blue-600 text-2xl transition"
+                    onclick="closeModal('modalConvert')"><i class="bi bi-x-circle"></i></button>
+            </div>
+            <div class="bg-blue-900 bg-opacity-30 border-2 border-blue-500 rounded-xl p-4 mb-4">
+                <div class="text-sm text-blue-600 mb-1 flex items-center gap-2"><i class="bi bi-graph-up-arrow"></i>
+                    Tipo de cambio actual</div>
+                <div class="text-2xl font-bold text-white">1 <span id="exchangeFrom">PEN</span> = <span
+                        id="exchangeRate">0.00</span> <span id="exchangeTo">USD</span></div>
+                <div class="text-xs text-blue-500 mt-1">Actualizado en tiempo real</div>
+            </div>
+            <form id="formConvert">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-blue-600 mb-2 flex items-center gap-2"><i
+                            class="bi bi-arrow-down-circle"></i> Desde</label>
+                    <select class="w-full py-3 px-4 input-enone rounded-lg" id="convertFrom" required>
+                        <option value="PEN">🇵🇪 Soles (PEN)</option>
+                        <option value="USD">🇺🇸 Dólares (USD)</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-blue-600 mb-1 flex items-center gap-2"><i
+                            class="bi bi-cash"></i> Monto a convertir</label>
+                    <input type="number" step="0.01" min="0.01" class="w-full py-3 px-4 input-enone rounded-lg"
+                        id="convertAmount" placeholder="100.00" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-blue-600 mb-2 flex items-center gap-2"><i
+                            class="bi bi-arrow-up-circle"></i> A</label>
+                    <select class="w-full py-3 px-4 input-enone rounded-lg opacity-60" id="convertTo" disabled>
+                        <option value="USD">🇺🇸 Dólares (USD)</option>
+                        <option value="PEN">🇵🇪 Soles (PEN)</option>
+                    </select>
+                </div>
+                <div class="bg-slate-800 bg-opacity-40 border-2 border-slate-600 rounded-xl p-4 mb-4"
+                    id="convertPreview" style="display: none;">
+                    <div class="text-sm text-slate-200 mb-1 flex items-center gap-2"><i class="bi bi-check-circle"></i>
+                        Recibirás aproximadamente</div>
+                    <div class="text-2xl font-bold text-white" id="convertResult">0.00 USD</div>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-blue-600 mb-1 flex items-center gap-2"><i
+                            class="bi bi-pencil"></i> Descripción (opcional)</label>
+                    <input type="text" class="w-full py-3 px-4 input-enone rounded-lg" id="convertDesc"
+                        placeholder="Conversión de moneda">
+                </div>
+                <button type="submit"
+                    class="w-full btn-primary text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2"
+                    id="btnConvertSubmit"><i class="bi bi-repeat"></i> Convertir</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fixed inset-0 p-4" id="modalRecentDetails">
+        <div class="modal-content enone-card p-6 rounded-2xl transform max-w-3xl w-full m-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-blue-400 flex items-center gap-2"><i class="bi bi-list-check"></i>
+                    Movimientos Recientes - <span id="recentDetailsCurrency">PEN</span></h3>
+                <button class="text-gray-400 hover:text-blue-400 text-2xl transition"
+                    onclick="closeModal('modalRecentDetails')"><i class="bi bi-x-circle"></i></button>
+            </div>
+            <div id="recentDetailsList" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                <p class="text-center py-8 text-gray-400">Cargando movimientos...</p>
+            </div>
+            <div class="mt-4 flex justify-between items-center">
+                <button class="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 transition"
+                    id="btnOpenHistoryFromRecent"><i class="bi bi-clock-history"></i> Ver historial completo</button>
+                <button
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition hidden"
+                    id="btnRecentLoadMore">Cargar Más...</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fixed inset-0 p-4" id="modalHistory">
+        <div class="modal-content enone-card p-6 rounded-2xl transform max-w-3xl w-full m-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-blue-400 flex items-center gap-2"><i class="bi bi-clock-history"></i>
+                    Historial Completo</h3>
+                <button class="text-gray-400 hover:text-blue-400 text-2xl transition"
+                    onclick="closeModal('modalHistory')"><i class="bi bi-x-circle"></i></button>
+            </div>
+            <div class="mb-4 flex flex-col sm:flex-row gap-4">
+                <select class="w-full py-3 px-4 input-enone rounded-lg flex-1" id="historyFilterType">
+                    <option value="">Todos los Tipos</option>
+                    <option value="DEPOSIT">Depósitos</option>
+                    <option value="TRANSFER">Transferencias</option>
+                    <option value="CONVERT">Conversiones</option>
+                </select>
+                <select class="w-full py-3 px-4 input-enone rounded-lg flex-1" id="historyFilterCurrency">
+                    <option value="">Todas las Monedas</option>
+                    <option value="PEN">PEN</option>
+                    <option value="USD">USD</option>
+                </select>
+            </div>
+            <div id="detailedTransactionList" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                <p class="text-center py-8 text-gray-400">Cargando historial...</p>
+            </div>
+            <div class="mt-4 flex justify-center">
+                <button
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition hidden"
+                    id="btnHistoryLoadMore">Cargar Más...</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fixed inset-0 p-4" id="modalTransactionDetail">
+        <div
+            class="modal-content bg-white p-8 rounded-3xl shadow-2xl border border-gray-200 transform max-w-2xl w-full m-auto max-h-[90vh] overflow-y-auto">
+
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mx-auto mb-4 shadow-2xl"
+                    id="detailTxIconWrapper">
+                    <i class="bi bi-check-circle-fill text-3xl text-white" id="detailTxIcon"></i>
+                </div>
+                <h1 class="text-3xl font-black text-gray-800 mb-2 glow-blue" id="detailTxTitle">¡Operación Exitosa!</h1>
+                <p class="text-gray-600 text-lg" id="detailTxSubtitle">Tu transacción se ha procesado correctamente</p>
+            </div>
+
+            <div
+                class="text-center mb-8 p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl border-2 border-blue-200">
+                <p class="text-base text-gray-600 mb-2" id="detailTxAmountLabel">Monto</p>
+                <p class="text-4xl font-black text-blue-600 mb-3 glow-blue" id="detailTxAmount">--.--</p>
+                <div class="inline-flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg"
+                    id="detailTxOperationType">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span id="detailTxType">Operación</span>
+                </div>
+            </div>
+
+            <div class="mb-6 hidden" id="detailTxSecurityCodeContainer">
+                <div class="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-200 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div
+                            class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white shadow-md">
+                            <i class="bi bi-shield-check-fill text-sm"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-amber-800">Código de Seguridad</h3>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl font-black text-amber-800 font-mono tracking-widest mb-2 bg-white bg-opacity-60 p-2 rounded-lg"
+                            id="detailTxSecurityCode">------</div>
+                        <p class="text-amber-700 text-xs">Comparte este código para verificar la transacción</p>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="bg-gray-50 rounded-xl p-5 mb-6 border border-gray-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white shadow-md">
+                        <i class="bi bi-info-circle-fill text-sm"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800">Detalles de la Transacción</h3>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center py-3 border-b border-gray-200"
+                        id="detailTxFromContainer" style="display: none;">
+                        <span class="text-gray-600 font-medium flex items-center gap-2">
+                            <i class="bi bi-arrow-down-circle text-emerald-500"></i> Recibido de
+                        </span>
+                        <span class="text-gray-800 font-bold break-all text-right" id="detailTxFrom">-</span>
+                    </div>
+
+                    <div class="flex justify-between items-center py-3 border-b border-gray-200"
+                        id="detailTxToContainer" style="display: none;">
+                        <span class="text-gray-600 font-medium flex items-center gap-2">
+                            <i class="bi bi-arrow-up-circle text-blue-500"></i> Enviado a
+                        </span>
+                        <span class="text-gray-800 font-bold break-all text-right" id="detailTxTo">-</span>
+                    </div>
+
+                    <div class="flex justify-between items-center py-3 border-b border-gray-200"
+                        id="detailTxIdContainer" style="display: none;">
+                        <span class="text-gray-600 font-medium flex items-center gap-2">
+                            <i class="bi bi-hash text-purple-500"></i> Nro. de operación
+                        </span>
+                        <span class="text-gray-800 font-bold font-mono" id="detailTxId">-</span>
+                    </div>
+
+                    <div class="flex justify-between items-center py-3 border-b border-gray-200"
+                        id="detailTxUidContainer" style="display: none;">
+                        <span class="text-gray-600 font-medium flex items-center gap-2">
+                            <i class="bi bi-fingerprint text-indigo-500"></i> ID Transacción
+                        </span>
+                        <span class="text-gray-800 font-bold font-mono text-sm" id="detailTxUid">-</span>
+                    </div>
+
+                    <div class="flex justify-between items-center py-3 border-b border-gray-200">
+                        <span class="text-gray-600 font-medium flex items-center gap-2">
+                            <i class="bi bi-calendar-event text-cyan-500"></i> Fecha y Hora
+                        </span>
+                        <span class="text-gray-800 font-bold" id="detailTxDate">-</span>
+                    </div>
+
+                    <div class="flex justify-between items-start py-3">
+                        <span class="text-gray-600 font-medium flex items-center gap-2 flex-shrink-0">
+                            <i class="bi bi-chat-left-text text-yellow-500"></i> Descripción
+                        </span>
+                        <span class="text-gray-800 font-bold text-right break-words ml-4" id="detailTxDesc">-</span>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button type="button" onclick="closeModal('modalTransactionDetail')"
+                    class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-4 px-6 rounded-2xl transition-all flex items-center justify-center gap-2 border border-gray-300">
+                    <i class="bi bi-x-circle"></i> Cerrar
+                </button>
+                <button type="button" id="btnDownloadModal"
+                    class="flex-1 btn-primary font-semibold py-4 px-6 rounded-2xl flex items-center justify-center gap-2 text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    <i class="bi bi-download"></i> Descargar Comprobante
+
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/api.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/wallet.js"></script>
+    <script src="assets/js/chatbot.js"></script>
+</body>
+
+</html>
